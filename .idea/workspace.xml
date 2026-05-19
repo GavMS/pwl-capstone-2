@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="40e16c3d-481a-4218-8411-95fb6a0698ea" name="Changes" comment="" />
+    <list default="true" id="40e16c3d-481a-4218-8411-95fb6a0698ea" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/project/backend/config/db.js" beforeDir="false" afterPath="$PROJECT_DIR$/project/backend/config/db.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/backend/controllers/authController.js" beforeDir="false" afterPath="$PROJECT_DIR$/project/backend/controllers/authController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/backend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/project/backend/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/backend/routes/auth.js" beforeDir="false" afterPath="$PROJECT_DIR$/project/backend/routes/auth.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/app/Http/Controllers/AuthController.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/app/Http/Controllers/AuthController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/resources/views/auth/login.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/resources/views/auth/login.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/resources/views/dashboard/admin.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/resources/views/dashboard/admin.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/resources/views/dashboard/kalab.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/resources/views/dashboard/kalab.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/resources/views/dashboard/kaprodi.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/resources/views/dashboard/kaprodi.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/resources/views/dashboard/layout.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/resources/views/dashboard/layout.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/resources/views/dashboard/stafadmin.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/resources/views/dashboard/stafadmin.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/resources/views/dashboard/staflab.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/resources/views/dashboard/staflab.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/routes/web.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/routes/web.php" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -26,6 +40,7 @@
   "keyToString": {
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "git-widget-placeholder": "sel",
