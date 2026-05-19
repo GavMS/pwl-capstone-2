@@ -1,250 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login - Digitalisasi Aset Lab</title>
-    <!-- Modern Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Vanilla CSS for Rich Aesthetics -->
-    <style>
-        :root {
-            --primary-color: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg-gradient-start: #0f172a;
-            --bg-gradient-end: #1e1b4b;
-            --surface-color: rgba(30, 41, 59, 0.7);
-            --text-primary: #f8fafc;
-            --text-secondary: #94a3b8;
-            --error-color: #ef4444;
-            --border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
-            color: var(--text-primary);
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Ambient Background Glows */
-        .glow {
-            position: absolute;
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(79, 70, 229, 0.2) 0%, rgba(0, 0, 0, 0) 70%);
-            border-radius: 50%;
-            top: -200px;
-            left: -200px;
-            z-index: 0;
-        }
-
-        .glow-2 {
-            position: absolute;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
-            border-radius: 50%;
-            bottom: -150px;
-            right: -100px;
-            z-index: 0;
-        }
-
-        .login-container {
-            width: 100%;
-            max-width: 440px;
-            background: var(--surface-color);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            padding: 48px 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            position: relative;
-            z-index: 1;
-            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .logo-area {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .logo-icon {
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, #6366f1, #a855f7);
-            border-radius: 16px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 16px;
-            box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.4);
-        }
-
-        .logo-icon svg {
-            width: 32px;
-            height: 32px;
-            fill: white;
-        }
-
-        h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
-        }
-
-        p.subtitle {
-            color: var(--text-secondary);
-            font-size: 15px;
-        }
-
-        .form-group {
-            margin-bottom: 24px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #cbd5e1;
-        }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 14px 16px;
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            color: white;
-            font-size: 15px;
-            transition: all 0.3s ease;
-            outline: none;
-        }
-
-        .form-control:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15);
-            background: rgba(15, 23, 42, 0.8);
-        }
-
-        .btn-submit {
-            width: 100%;
-            padding: 14px;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 8px;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
-        }
-
-        .btn-submit:hover {
-            background: var(--primary-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
-        }
-
-        .btn-submit:active {
-            transform: translateY(0);
-        }
-
-        .error-message {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #fca5a5;
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-            font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Responsive */
-        @media (max-width: 480px) {
-            .login-container {
-                padding: 40px 24px;
-                border-radius: 0;
-                min-height: 100vh;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-            }
-        }
-    </style>
+    <!-- Fonts and icons -->
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
+    <!-- Font Awesome Icons -->
+    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+    <!-- Nucleo Icons -->
+    <link href="{{ asset('assets/css/nucleo-icons.css') }}" rel="stylesheet" />
+    <link href="{{ asset('assets/css/nucleo-svg.css') }}" rel="stylesheet" />
+    <!-- Main Styling -->
+    <link href="{{ asset('assets/css/soft-ui-dashboard-tailwind.css?v=1.0.5') }}" rel="stylesheet" />
 </head>
-<body>
-    <div class="glow"></div>
-    <div class="glow-2"></div>
 
-    <div class="login-container">
-        <div class="logo-area">
-            <div class="logo-icon">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                </svg>
+<body class="m-0 font-sans antialiased font-normal bg-white text-start text-base leading-default text-slate-500">
+    <main class="mt-0 transition-all duration-200 ease-soft-in-out">
+        <section>
+            <div class="relative flex items-center p-0 overflow-hidden bg-center bg-cover min-h-75-screen">
+                <div class="container z-10">
+                    <div class="flex flex-wrap mt-0 -mx-3">
+                        <div class="flex flex-col w-full max-w-full px-3 mx-auto md:flex-0 shrink-0 md:w-6/12 lg:w-5/12 xl:w-4/12">
+                            <div class="relative flex flex-col min-w-0 mt-32 break-words bg-transparent border-0 shadow-none rounded-2xl bg-clip-border">
+                                <div class="p-6 pb-0 mb-0 bg-transparent border-b-0 rounded-t-2xl">
+                                    <h3 class="relative z-10 font-bold text-transparent bg-gradient-to-tl from-purple-700 to-pink-500 bg-clip-text text-2xl">
+                                        Selamat Datang
+                                    </h3>
+                                    <p class="mb-0 text-sm">Masukkan email dan password untuk masuk ke AsetLab</p>
+                                </div>
+
+                                <div class="flex-auto p-6">
+                                    <!-- Alert Success / Error -->
+                                    @if(session('success'))
+                                        <div class="relative w-full p-3 mb-4 text-white border border-solid rounded-lg bg-gradient-to-tl from-green-600 to-lime-400 border-transparent text-xs">
+                                            {{ session('success') }}
+                                        </div>
+                                    @endif
+
+                                    @if($errors->any())
+                                        <div class="relative w-full p-3 mb-4 text-white border border-solid rounded-lg bg-gradient-to-tl from-red-600 to-rose-400 border-transparent text-xs">
+                                            {{ $errors->first() }}
+                                        </div>
+                                    @endif
+
+                                    <form method="POST" action="{{ route('login.post') }}">
+                                        @csrf
+                                        <label class="mb-2 ml-1 font-bold text-xs text-slate-700">Email Address</label>
+                                        <div class="mb-4">
+                                            <input type="email" name="email" class="focus:shadow-soft-primary-outline text-sm leading-5.6 ease-soft block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding px-3 py-2 font-normal text-gray-700 transition-all focus:border-purple-300 focus:outline-none focus:transition-shadow" placeholder="Masukkan alamat email" value="{{ old('email') }}" required autofocus />
+                                        </div>
+
+                                        <label class="mb-2 ml-1 font-bold text-xs text-slate-700">Password</label>
+                                        <div class="mb-4">
+                                            <input type="password" name="password" class="focus:shadow-soft-primary-outline text-sm leading-5.6 ease-soft block w-full appearance-none rounded-lg border border-solid border-gray-300 bg-white bg-clip-padding px-3 py-2 font-normal text-gray-700 transition-all focus:border-purple-300 focus:outline-none focus:transition-shadow" placeholder="Masukkan password" required />
+                                        </div>
+
+                                        <div class="text-center">
+                                            <button type="submit" class="inline-block w-full px-6 py-3 mt-6 mb-0 font-bold text-center text-white uppercase align-middle transition-all bg-transparent border-0 rounded-lg cursor-pointer shadow-soft-md bg-x-25 bg-150 leading-pro text-xs ease-soft-in tracking-tight-soft bg-gradient-to-tl from-purple-700 to-pink-500 hover:scale-102 hover:shadow-soft-xs active:opacity-85">
+                                                Sign In
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <div class="p-6 px-1 pt-0 text-center bg-transparent border-t-0 border-t-solid rounded-b-2xl lg:px-2">
+                                    <p class="mx-auto mb-6 leading-normal text-sm">
+                                        Belum punya akun?
+                                        <a href="{{ route('register') }}" class="relative z-10 font-semibold text-transparent bg-gradient-to-tl from-purple-700 to-pink-500 bg-clip-text">
+                                            Daftar di sini
+                                        </a>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Skew image on right side -->
+                        <div class="w-full max-w-full px-3 lg:flex-0 shrink-0 md:w-6/12">
+                            <div class="absolute top-0 hidden w-3/5 h-full -mr-32 overflow-hidden -skew-x-10 -right-40 rounded-bl-xl md:block">
+                                <div class="absolute inset-x-0 top-0 z-0 h-full -ml-16 bg-cover skew-x-10" style="background-image: url('{{ asset('assets/img/curved-images/curved6.jpg') }}');"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <h1>Welcome Back</h1>
-            <p class="subtitle">Login to access the Laboratory Management System</p>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-12">
+        <div class="container">
+            <div class="flex flex-wrap -mx-3">
+                <div class="w-8/12 max-w-full px-3 mx-auto mt-1 text-center flex-0">
+                    <p class="mb-0 text-slate-400 text-xs">
+                        Copyright © <script>document.write(new Date().getFullYear());</script> Soft by Creative Tim.
+                        <span class="w-full"> Distributed by ❤️ ThemeWagon </span>
+                    </p>
+                </div>
+            </div>
         </div>
-
-        @if($errors->any())
-            <div class="error-message">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-                {{ $errors->first() }}
-            </div>
-        @endif
-
-        <form method="POST" action="{{ route('login.post') }}">
-            @csrf
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <div class="input-wrapper">
-                    <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" value="{{ old('email') }}" required autofocus>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="input-wrapper">
-                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required>
-                </div>
-            </div>
-
-            <button type="submit" class="btn-submit">Sign In</button>
-        </form>
-    </div>
+    </footer>
 </body>
+
+<!-- plugin for scrollbar -->
+<script src="{{ asset('assets/js/plugins/perfect-scrollbar.min.js') }}" async></script>
+<!-- main script file -->
+<script src="{{ asset('assets/js/soft-ui-dashboard-tailwind.js?v=1.0.5') }}" async></script>
 </html>

@@ -26,6 +26,16 @@ const pool = mysql.createPool({
 // Test connection and auto-create users table for testing
 const testConnection = async () => {
     try {
+        // Create database if not exists using a temporary connection
+        const tempConn = await mysql.createConnection({
+            host: process.env.DB_HOST || 'localhost',
+            user: process.env.DB_USER || 'root',
+            password: process.env.DB_PASSWORD || '',
+            port: process.env.DB_PORT || 3306,
+        });
+        await tempConn.query(`CREATE DATABASE IF NOT EXISTS \`${process.env.DB_NAME || 'capstone'}\``);
+        await tempConn.end();
+
         const connection = await pool.getConnection();
         console.log('Connected to MySQL Database.');
         
