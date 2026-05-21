@@ -8,41 +8,6 @@ use Illuminate\Support\Facades\Session;
 
 class AuthController extends Controller
 {
-    public function showRegister()
-    {
-        return view('auth.register');
-    }
-
-    public function register(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255',
-            'password' => 'required|min:6|confirmed'
-        ]);
-
-        try {
-            $apiUrl = env('NODEJS_API_URL', 'http://localhost:5000');
-            $response = Http::post("{$apiUrl}/api/auth/register", [
-                'name' => $request->name,
-                'email' => $request->email,
-                'password' => $request->password
-            ]);
-
-            if ($response->successful()) {
-                return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan login.');
-            } else {
-                return back()->withErrors([
-                    'email' => $response->json()['message'] ?? 'Registrasi gagal.'
-                ])->withInput();
-            }
-        } catch (\Exception $e) {
-            return back()->withErrors([
-                'email' => 'Tidak bisa terhubung ke server backend.'
-            ])->withInput();
-        }
-    }
-
     public function showLogin()
     {
         return view('auth.login');

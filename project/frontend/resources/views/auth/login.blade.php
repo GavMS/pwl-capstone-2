@@ -65,14 +65,6 @@
                                     </form>
                                 </div>
 
-                                <div class="p-6 px-1 pt-0 text-center bg-transparent border-t-0 border-t-solid rounded-b-2xl lg:px-2">
-                                    <p class="mx-auto mb-6 leading-normal text-sm">
-                                        Belum punya akun?
-                                        <a href="{{ route('register') }}" class="relative z-10 font-semibold text-transparent bg-gradient-to-tl from-purple-700 to-pink-500 bg-clip-text">
-                                            Daftar di sini
-                                        </a>
-                                    </p>
-                                </div>
                             </div>
                         </div>
 

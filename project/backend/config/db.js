@@ -92,8 +92,8 @@ const testConnection = async () => {
             ];
 
             for (const user of usersToInsert) {
-                await connection.query('INSERT INTO users (name, email, password, role_id) VALUES (?, ?, ?, ?)', [
-                    user.name, user.email, hashedPwd, user.role_id
+                await connection.query('INSERT INTO users (name, email, password, role_id, roles_id) VALUES (?, ?, ?, ?, ?)', [
+                    user.name, user.email, hashedPwd, user.role_id, user.role_id
                 ]);
                 console.log(`Dummy user created: ${user.email} / password123`);
             }

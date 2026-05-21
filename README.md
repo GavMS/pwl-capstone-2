@@ -62,7 +62,7 @@ cd project/frontend
 php artisan serve
 ```
 
-Buka browser: `http://127.0.0.1:8000`
+Buka browser: `http://127.0.0.1:8000` ### CURRENTLY ERROR ON THIS STAGE
 
 ---
 
