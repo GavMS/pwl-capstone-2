@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\RoomManagementController;
+use App\Http\Controllers\ProcurementController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -44,5 +45,18 @@ Route::prefix('admin')->middleware('role:Administrator')->group(function () {
     Route::put('/rooms/{id}',              [RoomManagementController::class, 'update'])->name('admin.rooms.update');
     Route::delete('/rooms/{id}',           [RoomManagementController::class, 'destroy'])->name('admin.rooms.destroy');
     Route::get('/rooms/{id}/check-delete', [RoomManagementController::class, 'checkDelete'])->name('admin.rooms.check-delete');
+});
+
+// ─────────────────────────────────────────────
+// Kepala Laboratorium: Draf Pengadaan Barang
+// ─────────────────────────────────────────────
+Route::prefix('kalab')->middleware('role:Kepala Laboratorium')->group(function () {
+    Route::get('/procurement',              [ProcurementController::class, 'index'])->name('kalab.procurement.index');
+    Route::get('/procurement/create',       [ProcurementController::class, 'create'])->name('kalab.procurement.create');
+    Route::post('/procurement',             [ProcurementController::class, 'store'])->name('kalab.procurement.store');
+    Route::get('/procurement/{id}',         [ProcurementController::class, 'show'])->name('kalab.procurement.show');
+    Route::get('/procurement/{id}/edit',    [ProcurementController::class, 'edit'])->name('kalab.procurement.edit');
+    Route::put('/procurement/{id}',         [ProcurementController::class, 'update'])->name('kalab.procurement.update');
+    Route::delete('/procurement/{id}',      [ProcurementController::class, 'destroy'])->name('kalab.procurement.destroy');
 });
 
