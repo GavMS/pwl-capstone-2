@@ -16,10 +16,12 @@ app.use(express.urlencoded({ extended: true }));
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const roomRoutes = require('./routes/rooms');
+const procurementRoutes = require('./routes/procurement');
 
 app.use('/api/auth',  authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/rooms', roomRoutes);
+app.use('/api/procurement', procurementRoutes);
 
 app.get('/', (req, res) => {
     res.send('Capstone API is running...');
