@@ -14,6 +14,96 @@
     <link href="{{ asset('assets/css/nucleo-svg.css') }}" rel="stylesheet" />
     <!-- Main Styling -->
     <link href="{{ asset('assets/css/soft-ui-dashboard-tailwind.css?v=1.0.5') }}" rel="stylesheet" />
+
+    <style>
+        /* --- Subtle login refinements (visual polish only) --- */
+        body {
+            background: linear-gradient(180deg, #fafbff 0%, #f5f6fb 100%);
+            color: #475569;
+        }
+
+        /* Card-like backdrop for the form column without changing markup */
+        main section .container > .flex > .flex-col > .relative {
+            background: #ffffff;
+            border: 1px solid #eef0f5;
+            border-radius: 1rem;
+            box-shadow:
+                0 1px 2px rgba(16, 24, 40, 0.04),
+                0 8px 24px -12px rgba(16, 24, 40, 0.08);
+            padding: 4px;
+            margin-top: 6rem;
+        }
+
+        /* Tone down the gradient title — keep brand, soften size */
+        main h3 {
+            font-size: 1.5rem;
+            letter-spacing: -0.01em;
+            line-height: 1.25;
+        }
+        main p.mb-0.text-sm {
+            color: #64748b;
+            line-height: 1.5;
+            margin-top: 0.35rem;
+        }
+
+        /* Labels: lighter weight, calmer letter spacing */
+        form label {
+            font-weight: 600 !important;
+            color: #475569 !important;
+            letter-spacing: 0.01em;
+            margin-left: 0.125rem !important;
+            margin-bottom: 0.4rem !important;
+            display: inline-block;
+        }
+
+        /* Inputs: softer border, calm focus ring */
+        form input[type="email"],
+        form input[type="password"] {
+            border-color: #e2e8f0 !important;
+            border-radius: 0.625rem !important;
+            padding: 0.625rem 0.875rem !important;
+            font-size: 0.875rem !important;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+        form input[type="email"]::placeholder,
+        form input[type="password"]::placeholder {
+            color: #94a3b8;
+        }
+        form input[type="email"]:focus,
+        form input[type="password"]:focus {
+            border-color: #c4b5fd !important;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.12) !important;
+            outline: none !important;
+        }
+
+        /* Button: keep gradient identity, but calmer typography & motion */
+        form button[type="submit"] {
+            margin-top: 1.25rem !important;
+            padding: 0.7rem 1.25rem !important;
+            font-size: 0.8125rem !important;
+            letter-spacing: 0.04em;
+            border-radius: 0.625rem !important;
+            box-shadow: 0 8px 20px -8px rgba(124, 58, 237, 0.45);
+            transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+        }
+        form button[type="submit"]:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px -10px rgba(124, 58, 237, 0.55);
+        }
+
+        /* Alerts: less saturated, more readable */
+        .relative.w-full.p-3.mb-4 {
+            border-radius: 0.625rem !important;
+            font-size: 0.8125rem !important;
+            padding: 0.7rem 0.875rem !important;
+        }
+
+        /* Footer copy: lower contrast, comfortable size */
+        footer p {
+            color: #94a3b8;
+            font-size: 0.75rem;
+        }
+    </style>
 </head>
 
 <body class="m-0 font-sans antialiased font-normal bg-white text-start text-base leading-default text-slate-500">
@@ -86,8 +176,7 @@
             <div class="flex flex-wrap -mx-3">
                 <div class="w-8/12 max-w-full px-3 mx-auto mt-1 text-center flex-0">
                     <p class="mb-0 text-slate-400 text-xs">
-                        Copyright © <script>document.write(new Date().getFullYear());</script> Soft by Creative Tim.
-                        <span class="w-full"> Distributed by ❤️ ThemeWagon </span>
+                        © <script>document.write(new Date().getFullYear());</script> AsetLab — Digitalisasi Aset Lab
                     </p>
                 </div>
             </div>

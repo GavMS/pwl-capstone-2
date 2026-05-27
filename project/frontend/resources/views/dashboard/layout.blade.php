@@ -17,15 +17,175 @@
     <link href="{{ asset('assets/css/soft-ui-dashboard-tailwind.css?v=1.0.5') }}" rel="stylesheet" />
     
     <style>
+        /* --- Original active states (kept) --- */
         .active-nav-item {
             background-color: #ffffff;
-            box-shadow: 0 20px 27px 0 rgba(0, 0, 0, 0.05);
+            box-shadow: 0 6px 18px -8px rgba(20, 20, 43, 0.10);
             border-radius: 0.5rem;
             font-weight: 600;
             color: #344767 !important;
         }
         .active-icon {
             background-image: linear-gradient(310deg, #7928ca, #ff007f) !important;
+        }
+
+        /* --- Subtle dashboard refinements (visual polish only) --- */
+
+        /* Page background: very light, soft tone */
+        body {
+            background-color: #f7f8fc;
+        }
+
+        /* Sidebar: refined shadow + spacing */
+        aside {
+            box-shadow: 0 8px 24px -16px rgba(15, 23, 42, 0.08);
+        }
+        aside a.block.px-8.py-6 {
+            padding-top: 1.25rem;
+            padding-bottom: 1.25rem;
+        }
+
+        /* Section header in sidebar: calmer */
+        aside h6.uppercase {
+            color: #94a3b8;
+            opacity: 1 !important;
+            font-size: 0.6875rem;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Sidebar nav items: softer hover for inactive items */
+        aside ul li a {
+            border-radius: 0.5rem;
+            transition: background-color .15s ease, color .15s ease;
+        }
+        aside ul li a:not(.active-nav-item):hover {
+            background-color: #f5f6fb;
+            color: #344767 !important;
+        }
+
+        /* Sidebar icon containers: lighter shadow */
+        aside ul li a > div.shadow-soft-md {
+            box-shadow: 0 2px 6px -2px rgba(20, 20, 43, 0.08) !important;
+        }
+
+        /* Sidebar footer user card: keep gradient but soften the white logout button */
+        aside .bg-gradient-to-tl.from-purple-700 button[type="submit"] {
+            letter-spacing: 0.04em;
+            border-radius: 0.5rem !important;
+            box-shadow: 0 4px 10px -4px rgba(0, 0, 0, 0.15) !important;
+            transition: transform .15s ease, box-shadow .15s ease;
+        }
+        aside .bg-gradient-to-tl.from-purple-700 button[type="submit"]:hover {
+            transform: translateY(-1px);
+        }
+
+        /* Top navbar: comfortable spacing, refined search */
+        main > nav {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem;
+        }
+        main > nav ol li a {
+            transition: color .15s ease;
+        }
+        main > nav h6 {
+            color: #344767;
+            letter-spacing: -0.005em;
+            margin-top: 0.125rem;
+        }
+
+        /* Search input refinements */
+        main > nav .relative.flex.flex-wrap.items-stretch {
+            border-color: #e2e8f0 !important;
+            border-radius: 0.625rem !important;
+            transition: border-color .15s ease, box-shadow .15s ease;
+        }
+        main > nav .relative.flex.flex-wrap.items-stretch:focus-within {
+            border-color: #c4b5fd !important;
+            box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.10);
+        }
+        main > nav input[type="text"]::placeholder {
+            color: #94a3b8;
+        }
+
+        /* User greeting + role badge: better breathing room */
+        main > nav ul li.flex.items-center.pl-4 span.role-badge {
+            margin-left: 0.25rem;
+            padding: 0.3rem 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+            box-shadow: 0 4px 10px -4px rgba(124, 58, 237, 0.35) !important;
+        }
+
+        /* Content cards: softer shadow, gentler hover */
+        main .relative.flex.flex-col.bg-white.shadow-soft-xl.rounded-2xl {
+            box-shadow:
+                0 1px 2px rgba(16, 24, 40, 0.04),
+                0 8px 24px -16px rgba(16, 24, 40, 0.10) !important;
+            border: 1px solid #eef0f5;
+            transition: transform .18s ease, box-shadow .18s ease !important;
+        }
+        main .relative.flex.flex-col.bg-white.shadow-soft-xl.rounded-2xl:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                0 1px 2px rgba(16, 24, 40, 0.04),
+                0 14px 30px -16px rgba(16, 24, 40, 0.14) !important;
+        }
+
+        /* Card titles: tighter tracking, consistent size */
+        main .relative.flex.flex-col.bg-white h5.text-lg {
+            color: #344767;
+            letter-spacing: -0.005em;
+            font-weight: 700;
+        }
+
+        /* Card icon container: gentler shadow */
+        main .relative.flex.flex-col.bg-white .shadow-soft-2xl {
+            box-shadow: 0 6px 16px -8px rgba(121, 40, 202, 0.45) !important;
+        }
+
+        /* Footer text: lower contrast */
+        footer .text-slate-500 {
+            color: #94a3b8 !important;
+        }
+
+        /* --- Extra card polish (applies to all role dashboards) --- */
+
+        /* Tighter, consistent card body */
+        main .relative.flex.flex-col.bg-white.shadow-soft-xl.rounded-2xl > .flex-auto.p-4 {
+            padding: 1.125rem 1.25rem;
+        }
+
+        /* Consistent card minimum height so the grid feels rhythmic */
+        main .relative.flex.flex-col.bg-white.shadow-soft-xl.rounded-2xl {
+            min-height: 92px;
+        }
+
+        /* Card icon tile: slightly smaller + cleaner rounding */
+        main .relative.flex.flex-col.bg-white .inline-block.w-12.h-12.rounded-lg {
+            width: 2.5rem !important;
+            height: 2.5rem !important;
+            border-radius: 0.625rem !important;
+        }
+        main .relative.flex.flex-col.bg-white .inline-block.w-12.h-12.rounded-lg i {
+            font-size: 0.95rem !important;
+        }
+
+        /* Card title: more refined size + tracking */
+        main .relative.flex.flex-col.bg-white h5.text-lg {
+            font-size: 1rem;
+            line-height: 1.35;
+        }
+
+        /* Consistent vertical spacing between card rows on wide screens */
+        main .flex.flex-wrap.-mx-3 > [class*="w-1/4"],
+        main .flex.flex-wrap.-mx-3 > [class*="sm:w-1/2"] {
+            margin-bottom: 1.25rem;
+        }
+
+        /* Remove the inline hover translate flicker — keep just the CSS-driven lift */
+        main .relative.flex.flex-col.bg-white.shadow-soft-xl.rounded-2xl.hover\:-translate-y-1:hover {
+            --tw-translate-y: 0;
         }
     </style>
 </head>
@@ -189,8 +349,9 @@
                     <div class="flex flex-wrap items-center -mx-3 lg:justify-between">
                         <div class="w-full max-w-full px-3 mt-0 mb-6 shrink-0 lg:mb-0 lg:w-1/2 lg:flex-none">
                             <div class="text-sm leading-normal text-center text-slate-500 lg:text-left">
-                                © 2026, dibuat dengan ❤️ untuk
-                                <a href="#" class="font-semibold text-slate-700">Digitalisasi Aset Lab</a>.
+                                © {{ date('Y') }}
+                                <a href="#" class="font-semibold text-slate-700">AsetLab</a>
+                                — Digitalisasi Aset Lab.
                             </div>
                         </div>
                     </div>
