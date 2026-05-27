@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\RoomManagementController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -19,3 +21,28 @@ Route::get('/dashboard/kalab',     [DashboardController::class, 'kalab'])->middl
 Route::get('/dashboard/kaprodi',   [DashboardController::class, 'kaprodi'])->middleware('role:Ketua Program Studi')->name('dashboard.kaprodi');
 Route::get('/dashboard/stafadmin', [DashboardController::class, 'stafadmin'])->middleware('role:Staf Administrasi')->name('dashboard.stafadmin');
 Route::get('/dashboard/staflab',   [DashboardController::class, 'staflab'])->middleware('role:Staf Laboratorium')->name('dashboard.staflab');
+
+// ─────────────────────────────────────────────
+// Admin: Manajemen User & Ruangan — hanya Administrator
+// ─────────────────────────────────────────────
+Route::prefix('admin')->middleware('role:Administrator')->group(function () {
+
+    // Manajemen User
+    Route::get('/users',                   [UserManagementController::class, 'index'])->name('admin.users.index');
+    Route::get('/users/create',            [UserManagementController::class, 'create'])->name('admin.users.create');
+    Route::post('/users',                  [UserManagementController::class, 'store'])->name('admin.users.store');
+    Route::get('/users/{id}/edit',         [UserManagementController::class, 'edit'])->name('admin.users.edit');
+    Route::put('/users/{id}',              [UserManagementController::class, 'update'])->name('admin.users.update');
+    Route::delete('/users/{id}',           [UserManagementController::class, 'destroy'])->name('admin.users.destroy');
+    Route::get('/users/{id}/check-delete', [UserManagementController::class, 'checkDelete'])->name('admin.users.check-delete');
+
+    // Manajemen Ruangan
+    Route::get('/rooms',                   [RoomManagementController::class, 'index'])->name('admin.rooms.index');
+    Route::get('/rooms/create',            [RoomManagementController::class, 'create'])->name('admin.rooms.create');
+    Route::post('/rooms',                  [RoomManagementController::class, 'store'])->name('admin.rooms.store');
+    Route::get('/rooms/{id}/edit',         [RoomManagementController::class, 'edit'])->name('admin.rooms.edit');
+    Route::put('/rooms/{id}',              [RoomManagementController::class, 'update'])->name('admin.rooms.update');
+    Route::delete('/rooms/{id}',           [RoomManagementController::class, 'destroy'])->name('admin.rooms.destroy');
+    Route::get('/rooms/{id}/check-delete', [RoomManagementController::class, 'checkDelete'])->name('admin.rooms.check-delete');
+});
+
