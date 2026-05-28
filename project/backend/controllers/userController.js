@@ -50,8 +50,8 @@ async function checkUserDependencies(userId) {
 exports.getAll = async (req, res) => {
     try {
         const [rows] = await db.query(`
-            SELECT u.id, u.name, u.email, u.role_id, r.name AS role, 
-                   u.created_at, u.updated_at
+            SELECT u.id, u.name, u.email, u.role_id, r.name AS role,
+                   u.is_active, u.created_at, u.updated_at
             FROM users u
             LEFT JOIN roles r ON u.role_id = r.id
             ORDER BY u.created_at DESC
@@ -71,7 +71,7 @@ exports.getOne = async (req, res) => {
         const { id } = req.params;
         const [rows] = await db.query(`
             SELECT u.id, u.name, u.email, u.role_id, r.name AS role,
-                   u.created_at, u.updated_at
+                   u.is_active, u.created_at, u.updated_at
             FROM users u
             LEFT JOIN roles r ON u.role_id = r.id
             WHERE u.id = ?
@@ -142,7 +142,7 @@ exports.getRoles = async (req, res) => {
 // POST /api/users — Tambah user baru
 // ─────────────────────────────────────────────
 exports.create = async (req, res) => {
-    const { name, email, password, role_id } = req.body;
+    const { name, email, password, role_id, is_active } = req.body;
 
     if (!name || !email || !password || !role_id) {
         return res.status(400).json({ message: 'Semua field wajib diisi (name, email, password, role_id)' });
@@ -156,9 +156,10 @@ exports.create = async (req, res) => {
         }
 
         const hashedPwd = await bcrypt.hash(password, 10);
+        const activeVal = (is_active === false || is_active === '0' || is_active === 0) ? 0 : 1;
         const [result] = await db.query(
-            'INSERT INTO users (name, email, password, role_id, roles_id) VALUES (?, ?, ?, ?, ?)',
-            [name, email, hashedPwd, role_id, role_id]
+            'INSERT INTO users (name, email, password, role_id, roles_id, is_active) VALUES (?, ?, ?, ?, ?, ?)',
+            [name, email, hashedPwd, role_id, role_id, activeVal]
         );
 
         res.status(201).json({ message: 'User berhasil ditambahkan', id: result.insertId });
@@ -173,7 +174,7 @@ exports.create = async (req, res) => {
 // ─────────────────────────────────────────────
 exports.update = async (req, res) => {
     const { id } = req.params;
-    const { name, email, password, role_id } = req.body;
+    const { name, email, password, role_id, is_active } = req.body;
 
     if (!name || !email || !role_id) {
         return res.status(400).json({ message: 'Field name, email, dan role_id wajib diisi' });
@@ -192,18 +193,20 @@ exports.update = async (req, res) => {
             return res.status(409).json({ message: 'Email sudah digunakan oleh user lain' });
         }
 
+        const activeVal = (is_active === false || is_active === '0' || is_active === 0) ? 0 : 1;
+
         if (password && password.trim() !== '') {
             // Update dengan password baru
             const hashedPwd = await bcrypt.hash(password, 10);
             await db.query(
-                'UPDATE users SET name=?, email=?, password=?, role_id=?, roles_id=?, updated_at=NOW() WHERE id=?',
-                [name, email, hashedPwd, role_id, role_id, id]
+                'UPDATE users SET name=?, email=?, password=?, role_id=?, roles_id=?, is_active=?, updated_at=NOW() WHERE id=?',
+                [name, email, hashedPwd, role_id, role_id, activeVal, id]
             );
         } else {
             // Update tanpa mengubah password
             await db.query(
-                'UPDATE users SET name=?, email=?, role_id=?, roles_id=?, updated_at=NOW() WHERE id=?',
-                [name, email, role_id, role_id, id]
+                'UPDATE users SET name=?, email=?, role_id=?, roles_id=?, is_active=?, updated_at=NOW() WHERE id=?',
+                [name, email, role_id, role_id, activeVal, id]
             );
         }
 
@@ -240,6 +243,69 @@ exports.destroy = async (req, res) => {
         res.json({ message: 'User berhasil dihapus' });
     } catch (err) {
         console.error('destroy user error:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
+// ─────────────────────────────────────────────
+// GET /api/users/dashboard-stats — Statistik untuk dashboard admin
+// ─────────────────────────────────────────────
+exports.getDashboardStats = async (req, res) => {
+    try {
+        // Pengguna aktif & total
+        const [[userStats]] = await db.query(`
+            SELECT
+                COUNT(*) AS total_users,
+                SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) AS active_users
+            FROM users
+        `);
+
+        // Ruangan
+        const [[roomStats]] = await db.query(`
+            SELECT COUNT(*) AS room_count FROM rooms
+        `);
+
+        // Aset inventaris
+        const [[assetStats]] = await db.query(`
+            SELECT COUNT(*) AS asset_count FROM assets
+        `).catch(() => [[{ asset_count: 0 }]]);
+
+        // BHP (consumables)
+        const [[bhpStats]] = await db.query(`
+            SELECT
+                COUNT(*) AS bhp_count,
+                SUM(CASE WHEN quantity <= 5 THEN 1 ELSE 0 END) AS low_stock_count
+            FROM consumables
+        `).catch(() => [[{ bhp_count: 0, low_stock_count: 0 }]]);
+
+        // Gedung unik dari rooms (distinct building — pakai prefix kode)
+        const [[buildingStats]] = await db.query(`
+            SELECT COUNT(DISTINCT SUBSTRING_INDEX(code, '-', 1)) AS building_count FROM rooms
+        `).catch(() => [[{ building_count: 0 }]]);
+
+        // Pengguna terbaru (5 terakhir)
+        const [recentUsers] = await db.query(`
+            SELECT u.id, u.name, u.email, r.name AS role, u.is_active
+            FROM users u
+            LEFT JOIN roles r ON u.role_id = r.id
+            ORDER BY u.created_at DESC
+            LIMIT 5
+        `);
+
+        res.json({
+            stats: {
+                total_users:    parseInt(userStats.total_users)   || 0,
+                active_users:   parseInt(userStats.active_users)  || 0,
+                room_count:     parseInt(roomStats.room_count)     || 0,
+                building_count: parseInt(buildingStats.building_count) || 0,
+                asset_count:    parseInt(assetStats.asset_count)  || 0,
+                bhp_count:      parseInt(bhpStats.bhp_count)      || 0,
+                low_stock_count:parseInt(bhpStats.low_stock_count)|| 0,
+            },
+            recentUsers
+        });
+    } catch (err) {
+        console.error('getDashboardStats error:', err);
         res.status(500).json({ message: 'Server error' });
     }
 };

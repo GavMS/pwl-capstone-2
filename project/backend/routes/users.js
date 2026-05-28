@@ -9,8 +9,11 @@ router.use(authMiddleware);
 // GET /api/users          — Daftar semua user
 router.get('/', userController.getAll);
 
-// GET /api/users/roles    — Daftar semua role (untuk dropdown form)
+// GET /api/users/roles          — Daftar semua role (untuk dropdown form)
 router.get('/roles', userController.getRoles);
+
+// GET /api/users/dashboard-stats — Statistik dashboard admin
+router.get('/dashboard-stats', userController.getDashboardStats);
 
 // GET /api/users/:id      — Detail 1 user (Smart Edit)
 router.get('/:id', userController.getOne);

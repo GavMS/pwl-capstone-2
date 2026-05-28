@@ -56,6 +56,7 @@ const testConnection = async () => {
                 role_id BIGINT,
                 room_id BIGINT NULL,
                 roles_id BIGINT NULL,
+                is_active TINYINT(1) NOT NULL DEFAULT 1,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL
@@ -80,6 +81,16 @@ const testConnection = async () => {
         if (rolesIdCols.length === 0) {
             await connection.query(`ALTER TABLE users ADD COLUMN roles_id BIGINT NULL`);
             console.log('Added roles_id column to users table.');
+        }
+
+        // Ensure users.is_active column exists (safe migration)
+        const [isActiveCols] = await connection.query(`
+            SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'is_active'
+        `);
+        if (isActiveCols.length === 0) {
+            await connection.query(`ALTER TABLE users ADD COLUMN is_active TINYINT(1) NOT NULL DEFAULT 1`);
+            console.log('Added is_active column to users table.');
         }
 
         // Insert dummy users for all roles

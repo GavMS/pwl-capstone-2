@@ -214,7 +214,15 @@
                     </td>
                     <td style="font-size:.875rem; color:#7b809a;">{{ $u['role'] ?? '-' }}</td>
                     <td style="font-size:.875rem; color:#7b809a;">{{ $u['email'] ?? '-' }}</td>
-                    <td><span class="status-aktif">Aktif</span></td>
+                    <td>
+                        @if(($u['is_active'] ?? 1) == 1)
+                            <span class="status-aktif">Aktif</span>
+                        @else
+                            <span style="display:inline-flex;align-items:center;gap:.35rem;padding:.25rem .7rem;border-radius:9999px;font-size:.7rem;font-weight:600;background:#f1f5f9;color:#64748b;">
+                                <span style="width:6px;height:6px;border-radius:50%;background:#94a3b8;flex-shrink:0;display:inline-block;"></span>Nonaktif
+                            </span>
+                        @endif
+                    </td>
                 </tr>
                 @empty
                 <tr>
