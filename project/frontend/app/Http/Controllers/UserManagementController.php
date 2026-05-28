@@ -70,15 +70,19 @@ class UserManagementController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'     => 'required|string|max:255',
-            'email'    => 'required|email|max:255',
-            'password' => 'required|string|min:6',
-            'role_id'  => 'required|integer',
+            'name'                  => 'required|string|max:255',
+            'email'                 => 'required|email|max:255',
+            'password'              => 'required|string|min:6|confirmed',
+            'password_confirmation' => 'required',
+            'role_id'               => 'required|integer',
         ]);
 
         try {
+            $payload = $request->only('name', 'email', 'password', 'role_id');
+            $payload['is_active'] = $request->has('is_active') ? 1 : 0;
+
             $response = Http::withHeaders($this->authHeaders())
-                ->post("{$this->apiUrl()}/api/users", $request->only('name', 'email', 'password', 'role_id'));
+                ->post("{$this->apiUrl()}/api/users", $payload);
 
             if ($response->successful()) {
                 return redirect()->route('admin.users.index')
@@ -128,15 +132,26 @@ class UserManagementController extends Controller
     // ─────────────────────────────────────────────
     public function update(Request $request, string $id)
     {
-        $request->validate([
+        $rules = [
             'name'    => 'required|string|max:255',
             'email'   => 'required|email|max:255',
             'role_id' => 'required|integer',
-            'password' => 'nullable|string|min:6',
-        ]);
+            'password' => 'nullable|string|min:6|confirmed',
+        ];
+        if ($request->filled('password')) {
+            $rules['password_confirmation'] = 'required';
+        }
+        $request->validate($rules);
+
+        // Mencegah user menonaktifkan akun sendiri
+        $currentUser = Session::get('user');
+        if ($currentUser && $currentUser['id'] == $id && !$request->has('is_active')) {
+            return back()->withErrors(['api' => 'Anda tidak dapat menonaktifkan akun Anda sendiri.'])->withInput();
+        }
 
         try {
             $payload = $request->only('name', 'email', 'role_id');
+            $payload['is_active'] = $request->has('is_active') ? 1 : 0;
             if ($request->filled('password')) {
                 $payload['password'] = $request->password;
             }

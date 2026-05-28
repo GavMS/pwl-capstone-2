@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Http;
 
 class DashboardController extends Controller
 {
@@ -11,9 +12,39 @@ class DashboardController extends Controller
         return Session::get('user', []);
     }
 
+    private function apiUrl(): string
+    {
+        return env('NODEJS_API_URL', 'http://localhost:5000');
+    }
+
+    private function authHeaders(): array
+    {
+        return ['Authorization' => 'Bearer ' . Session::get('token', '')];
+    }
+
     public function admin()
     {
-        return view('dashboard.admin', ['user' => $this->getUser()]);
+        $stats       = [];
+        $recentUsers = [];
+
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->get("{$this->apiUrl()}/api/users/dashboard-stats");
+
+            if ($response->successful()) {
+                $data        = $response->json();
+                $stats       = $data['stats']       ?? [];
+                $recentUsers = $data['recentUsers'] ?? [];
+            }
+        } catch (\Exception $e) {
+            // biarkan stats kosong — tampilkan 0
+        }
+
+        return view('dashboard.admin', [
+            'user'        => $this->getUser(),
+            'stats'       => $stats,
+            'recentUsers' => $recentUsers,
+        ]);
     }
 
     public function kalab()

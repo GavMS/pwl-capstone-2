@@ -324,7 +324,7 @@ select.form-input { appearance: none; -webkit-appearance: none; cursor: pointer;
                                style="padding-right: 2.75rem;"
                                placeholder="{{ isset($editUser) ? 'Biarkan kosong jika tidak ingin diubah...' : 'Minimal 6 karakter...' }}"
                                {{ isset($editUser) ? '' : 'required' }}
-                               autocomplete="{{ isset($editUser) ? 'new-password' : 'new-password' }}" />
+                               autocomplete="new-password" />
                         <button type="button" class="pwd-toggle" id="togglePwd" title="Tampilkan/sembunyikan password">
                             <i class="fas fa-eye" id="eyeIcon"></i>
                         </button>
@@ -333,6 +333,47 @@ select.form-input { appearance: none; -webkit-appearance: none; cursor: pointer;
                     <p class="field-hint"><i class="fas fa-info-circle"></i>Password minimal 6 karakter.</p>
                     @endif
                 </div>
+
+                {{-- ── Konfirmasi Password ──── --}}
+                <div class="field-group" id="confirmPwdGroup">
+                    <label class="field-label" for="password_confirmation">
+                        Konfirmasi Password
+                        @if(!isset($editUser))
+                            <span class="req">*</span>
+                        @else
+                            <span class="opt">(Kosongkan jika tidak mengubah password)</span>
+                        @endif
+                    </label>
+                    <div class="input-wrap">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="password_confirmation" name="password_confirmation" class="form-input"
+                               style="padding-right: 2.75rem;"
+                               placeholder="Ulangi password..."
+                               {{ isset($editUser) ? '' : 'required' }}
+                               autocomplete="new-password" />
+                        <button type="button" class="pwd-toggle" id="togglePwdConfirm" title="Tampilkan/sembunyikan konfirmasi">
+                            <i class="fas fa-eye" id="eyeIconConfirm"></i>
+                        </button>
+                    </div>
+                </div>
+
+                {{-- ── Status Aktif (hanya edit) ──── --}}
+                @if(isset($editUser))
+                <div class="field-group">
+                    <label class="field-label">Status Akun</label>
+                    <div style="display:flex; align-items:center; gap:1rem; padding:.5rem 0;">
+                        <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer;">
+                            <input type="checkbox" name="is_active" id="isActive" value="1"
+                                   style="width:1rem;height:1rem;accent-color:#7928ca;"
+                                   {{ ($editUser['is_active'] ?? 1) ? 'checked' : '' }}>
+                            <span style="font-size:.875rem; color:#344767; font-weight:600;" id="statusLabel">
+                                {{ ($editUser['is_active'] ?? 1) ? 'Aktif' : 'Nonaktif' }}
+                            </span>
+                        </label>
+                        <span style="font-size:.775rem; color:#adb5bd;">Nonaktifkan untuk mencabut akses login pengguna ini.</span>
+                    </div>
+                </div>
+                @endif
 
                 {{-- ── Actions ──── --}}
                 <div class="form-actions">
@@ -351,6 +392,7 @@ select.form-input { appearance: none; -webkit-appearance: none; cursor: pointer;
 </div>
 
 <script>
+// Toggle password visibility
 document.getElementById('togglePwd').addEventListener('click', function () {
     const input = document.getElementById('password');
     const icon  = document.getElementById('eyeIcon');
@@ -362,5 +404,46 @@ document.getElementById('togglePwd').addEventListener('click', function () {
         icon.classList.replace('fa-eye-slash', 'fa-eye');
     }
 });
+
+// Toggle confirm password visibility
+const toggleConfirm = document.getElementById('togglePwdConfirm');
+if (toggleConfirm) {
+    toggleConfirm.addEventListener('click', function () {
+        const input = document.getElementById('password_confirmation');
+        const icon  = document.getElementById('eyeIconConfirm');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.classList.replace('fa-eye', 'fa-eye-slash');
+        } else {
+            input.type = 'password';
+            icon.classList.replace('fa-eye-slash', 'fa-eye');
+        }
+    });
+}
+
+// Di mode edit: atur confirm password wajib jika user mengetik password
+const pwdInput = document.getElementById('password');
+const confirmInput = document.getElementById('password_confirmation');
+if (pwdInput && confirmInput) {
+    pwdInput.addEventListener('input', function () {
+        if (this.value.trim().length > 0) {
+            confirmInput.required = true;
+        } else {
+            confirmInput.required = false;
+        }
+    });
+}
+
+// Label status aktif/nonaktif
+const isActiveChk = document.getElementById('isActive');
+const statusLabel  = document.getElementById('statusLabel');
+if (isActiveChk && statusLabel) {
+    isActiveChk.addEventListener('change', function () {
+        statusLabel.textContent = this.checked ? 'Aktif' : 'Nonaktif';
+        statusLabel.style.color = this.checked ? '#15803d' : '#64748b';
+    });
+    // Set warna awal
+    statusLabel.style.color = isActiveChk.checked ? '#15803d' : '#64748b';
+}
 </script>
 @endsection

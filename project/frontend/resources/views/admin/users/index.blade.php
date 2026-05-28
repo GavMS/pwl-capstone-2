@@ -266,8 +266,8 @@
             <tbody id="usersTableBody">
                 @forelse($users as $u)
                 @php
-                    $statusVal = $u['status'] ?? 'Aktif';
-                    $isAktif = strtolower($statusVal) !== 'nonaktif';
+                    // Support kedua field: is_active (baru) dan status (lama)
+                    $isAktif = isset($u['is_active']) ? (bool)$u['is_active'] : (strtolower($u['status'] ?? 'aktif') !== 'nonaktif');
                 @endphp
                 <tr class="user-row">
                     <td>
