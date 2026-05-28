@@ -1,5 +1,6 @@
 @extends('dashboard.layout')
 @section('title', isset($editRoom) ? 'Edit Ruangan' : 'Tambah Ruangan')
+@section('page_title', isset($editRoom) ? 'Edit Ruangan' : 'Tambah Ruangan')
 
 @section('content')
 

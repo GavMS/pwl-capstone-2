@@ -1,5 +1,6 @@
 @extends('dashboard.layout')
 @section('title', 'Draf Pengadaan Barang')
+@section('page_title', 'Draf Pengadaan')
 
 @section('content')
 <style>

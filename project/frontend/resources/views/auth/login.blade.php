@@ -8,7 +8,7 @@
     <!-- Fonts and icons -->
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
     <!-- Font Awesome Icons -->
-    <script src="https://kit.fontawesome.com/42d5adcbca.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
     <!-- Nucleo Icons -->
     <link href="{{ asset('assets/css/nucleo-icons.css') }}" rel="stylesheet" />
     <link href="{{ asset('assets/css/nucleo-svg.css') }}" rel="stylesheet" />
@@ -31,7 +31,7 @@
                 0 1px 2px rgba(16, 24, 40, 0.04),
                 0 8px 24px -12px rgba(16, 24, 40, 0.08);
             padding: 4px;
-            margin-top: 6rem;
+            margin-top: 0rem;
         }
 
         /* Tone down the gradient title — keep brand, soften size */
@@ -109,7 +109,7 @@
 <body class="m-0 font-sans antialiased font-normal bg-white text-start text-base leading-default text-slate-500">
     <main class="mt-0 transition-all duration-200 ease-soft-in-out">
         <section>
-            <div class="relative flex items-center p-0 overflow-hidden bg-center bg-cover min-h-75-screen">
+            <div class="relative flex items-center p-0 overflow-hidden bg-center bg-cover min-h-screen">
                 <div class="container z-10">
                     <div class="flex flex-wrap mt-0 -mx-3">
                         <div class="flex flex-col w-full max-w-full px-3 mx-auto md:flex-0 shrink-0 md:w-6/12 lg:w-5/12 xl:w-4/12">
@@ -169,19 +169,6 @@
             </div>
         </section>
     </main>
-
-    <!-- Footer -->
-    <footer class="py-12">
-        <div class="container">
-            <div class="flex flex-wrap -mx-3">
-                <div class="w-8/12 max-w-full px-3 mx-auto mt-1 text-center flex-0">
-                    <p class="mb-0 text-slate-400 text-xs">
-                        © <script>document.write(new Date().getFullYear());</script> AsetLab — Digitalisasi Aset Lab
-                    </p>
-                </div>
-            </div>
-        </div>
-    </footer>
 </body>
 
 <!-- plugin for scrollbar -->

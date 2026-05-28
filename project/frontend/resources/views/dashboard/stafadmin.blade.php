@@ -1,5 +1,6 @@
 @extends('dashboard.layout')
 @section('title', 'Dashboard Staf Administrasi')
+@section('page_title', 'Dashboard')
 @section('content')
 <div class="flex flex-wrap -mx-3">
     <!-- card 1: Dokumen Pengadaan -->

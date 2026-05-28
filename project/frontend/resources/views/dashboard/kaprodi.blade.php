@@ -1,5 +1,6 @@
 @extends('dashboard.layout')
 @section('title', 'Dashboard Ketua Program Studi')
+@section('page_title', 'Dashboard')
 @section('content')
 <div class="flex flex-wrap -mx-3">
     <!-- card 1: Kebutuhan Lab Prodi -->

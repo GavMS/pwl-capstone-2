@@ -1,5 +1,6 @@
 @extends('dashboard.layout')
 @section('title', $editDraft ? 'Edit Draf Pengadaan' : 'Buat Draf Pengadaan Baru')
+@section('page_title', $editDraft ? 'Edit Draf Pengadaan' : 'Buat Draf Pengadaan')
 
 @section('content')
 <style>
