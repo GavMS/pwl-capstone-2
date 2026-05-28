@@ -6,6 +6,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\RoomManagementController;
 use App\Http\Controllers\ProcurementController;
+use App\Http\Controllers\InventoryController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -58,5 +59,9 @@ Route::prefix('kalab')->middleware('role:Kepala Laboratorium')->group(function (
     Route::get('/procurement/{id}/edit',    [ProcurementController::class, 'edit'])->name('kalab.procurement.edit');
     Route::put('/procurement/{id}',         [ProcurementController::class, 'update'])->name('kalab.procurement.update');
     Route::delete('/procurement/{id}',      [ProcurementController::class, 'destroy'])->name('kalab.procurement.destroy');
+    
+    // Inventaris & BHP
+    Route::get('/inventaris',               [InventoryController::class, 'assets'])->name('kalab.inventaris.index');
+    Route::get('/bhp',                      [InventoryController::class, 'consumables'])->name('kalab.bhp.index');
 });
 

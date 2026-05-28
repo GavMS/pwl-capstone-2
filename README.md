@@ -58,7 +58,7 @@ npm start
 
 **RESET DB:***
 ```
-npm run seed	Truncate semua tabel → insert ulang dummy data (cepat, tabel tetap ada)
+npm run seed
 npm run reset
 ```
 

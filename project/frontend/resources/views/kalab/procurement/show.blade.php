@@ -23,10 +23,11 @@
     color: #7b809a;
 }
 .section-divider {
+    border: none;
     border-bottom: 1px solid #f0f2f5;
     margin: 1.5rem 0;
 }
-/* ─── Grid Cards ──────────────────────────────────── */
+/* ─── Info Boxes ──────────────────────────────────── */
 .info-box {
     background: #f8f9fa;
     border-radius: .75rem;
@@ -40,6 +41,7 @@
     background: linear-gradient(310deg, #7928ca, #ff007f);
     display: flex; align-items: center; justify-content: center;
     color: #fff; font-size: 1rem;
+    flex-shrink: 0;
 }
 .info-box-title {
     font-size: .65rem;
@@ -54,59 +56,189 @@
     color: #344767;
     margin: 0;
 }
-/* ─── Badges ──────────────────────────────────────── */
+/* ─── Status Badges ───────────────────────────────── */
 .status-badge {
     display: inline-flex;
     align-items: center;
     gap: .35rem;
-    padding: .3rem .85rem;
+    padding: .35rem 1rem;
     border-radius: .45rem;
-    font-size: .7rem;
+    font-size: .75rem;
     font-weight: 700;
     border: 1.5px solid transparent;
 }
 .status-badge .sb-dot {
-    width: 6px; height: 6px;
+    width: 7px; height: 7px;
     border-radius: 50%;
     display: inline-block;
 }
-.status-draft { background:#fff7ed; color:#c2410c; border-color:#fed7aa; }
+.status-draft     { background:#fff7ed; color:#c2410c; border-color:#fed7aa; }
 .status-draft .sb-dot { background:#ea580c; }
 .status-submitted { background:#e8f5e9; color:#2e7d32; border-color:#c8e6c9; }
 .status-submitted .sb-dot { background:#4caf50; }
+.status-approved     { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+.status-approved .sb-dot { background:#2563eb; }
 
+/* ─── Type Badges ─────────────────────────────────── */
 .type-badge {
     display: inline-block;
-    padding: .2rem .6rem;
+    padding: .2rem .65rem;
     font-size: .65rem;
     font-weight: 700;
     text-transform: uppercase;
-    border-radius: .25rem;
+    border-radius: .3rem;
+    letter-spacing: .03em;
 }
 .type-inventaris { background: #e0f2fe; color: #0369a1; }
-.type-bhp { background: #fdf2f8; color: #be185d; }
+.type-bhp        { background: #fdf2f8; color: #be185d; }
 
-/* ─── Table ───────────────────────────────────────── */
+/* ─── Items Table ─────────────────────────────────── */
 .details-table { width: 100%; border-collapse: collapse; }
 .details-table thead th {
     padding: .75rem 1rem;
     font-size: .65rem; font-weight: 700; text-transform: uppercase;
-    color: #adb5bd; border-bottom: 1px solid #f0f2f5;
-    text-align: left;
+    color: #adb5bd; border-bottom: 2px solid #f0f2f5;
+    text-align: left; white-space: nowrap;
+    background: #fafbfc;
 }
 .details-table tbody td {
-    padding: 1rem;
+    padding: 1.1rem 1rem;
     border-bottom: 1px solid #f0f2f5;
     font-size: .875rem;
     color: #7b809a;
+    vertical-align: middle;
 }
 .details-table tbody tr:last-child td { border-bottom: none; }
 .details-table tbody tr:hover { background: #fafbfc; }
 
+/* No column */
+.col-no {
+    text-align: center;
+    font-weight: 700;
+    color: #adb5bd;
+    font-size: .8rem;
+}
+/* Item name */
+.item-name {
+    font-weight: 700;
+    color: #344767;
+    font-size: .9rem;
+    margin-bottom: .15rem;
+}
+.item-sub {
+    font-size: .72rem;
+    color: #adb5bd;
+}
+/* Price cell */
+.price-cell {
+    text-align: right;
+    font-weight: 600;
+    color: #344767;
+    white-space: nowrap;
+}
+.price-unit-label {
+    font-size: .65rem;
+    color: #adb5bd;
+    font-weight: 500;
+    display: block;
+    text-align: right;
+}
+/* Total cell */
+.total-cell {
+    text-align: right;
+    white-space: nowrap;
+}
+.total-amount {
+    font-weight: 700;
+    color: #7928ca;
+    font-size: .9rem;
+}
+/* Qty cell */
+.qty-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.2rem;
+    padding: .25rem .6rem;
+    background: #f0f2f5;
+    border-radius: .4rem;
+    font-size: .8rem;
+    font-weight: 700;
+    color: #344767;
+}
+/* Link button */
+.btn-purchase-link {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .35rem .8rem;
+    font-size: .75rem;
+    font-weight: 600;
+    color: #2152ff;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: .4rem;
+    text-decoration: none;
+    transition: background .15s, transform .1s;
+    white-space: nowrap;
+}
+.btn-purchase-link:hover {
+    background: #dbeafe;
+    transform: translateY(-1px);
+    color: #1d4ed8;
+}
+.btn-purchase-link i { font-size: .7rem; }
+.no-link-text {
+    font-size: .75rem;
+    color: #d2d6da;
+    font-style: italic;
+}
+
+/* Replace asset info */
+.replace-info {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    font-size: .8rem;
+}
+.replace-icon {
+    color: #f59e0b;
+    margin-top: .1rem;
+    flex-shrink: 0;
+}
+.replace-name { font-weight: 700; color: #344767; }
+.replace-code { font-size: .7rem; color: #adb5bd; }
+
+/* ─── Grand Total Row ─────────────────────────────── */
+.grand-total-bar {
+    background: linear-gradient(135deg, #f5f3ff, #fdf2f8);
+    border: 1px solid #e9d5ff;
+    border-radius: .75rem;
+    padding: 1rem 1.5rem;
+    margin-top: 1.25rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .75rem;
+}
+.grand-total-label {
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #7b809a;
+    margin-bottom: .2rem;
+}
+.grand-total-value {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #7928ca;
+}
+
 /* ─── Buttons ─────────────────────────────────────── */
 .btn-back {
     display: inline-flex; align-items: center; gap: .5rem;
-    padding: .5rem 1.25rem; font-size: .8125rem; font-weight: 600; color: #7b809a;
+    padding: .55rem 1.25rem; font-size: .8125rem; font-weight: 600; color: #7b809a;
     background: #f0f2f5; border: none; border-radius: .5rem; cursor: pointer;
     transition: background .15s; text-decoration: none;
 }
@@ -114,66 +246,72 @@
 
 .btn-edit-action {
     display: inline-flex; align-items: center; gap: .5rem;
-    padding: .5rem 1.25rem; font-size: .8125rem; font-weight: 600; color: #fff;
-    background: linear-gradient(310deg, #2152ff, #21d4fd); border: none; border-radius: .5rem; cursor: pointer;
+    padding: .55rem 1.25rem; font-size: .8125rem; font-weight: 600; color: #fff;
+    background: linear-gradient(310deg, #2152ff, #21d4fd);
+    border: none; border-radius: .5rem; cursor: pointer;
     box-shadow: 0 3px 5px -1px rgba(33,82,255,.4); text-decoration: none;
     transition: transform .15s, box-shadow .15s;
 }
 .btn-edit-action:hover { transform: translateY(-1px); box-shadow: 0 6px 15px -3px rgba(33,82,255,.5); color: #fff; }
 
-.btn-link {
-    display: inline-flex; align-items: center; gap: .35rem;
-    padding: .3rem .6rem; font-size: .75rem; font-weight: 600; color: #2152ff;
-    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: .35rem;
-    text-decoration: none; transition: background .15s;
+/* ─── Empty Items ─────────────────────────────────── */
+.empty-items {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: #adb5bd;
 }
-.btn-link:hover { background: #dbeafe; }
 </style>
 
 <div class="flex flex-wrap -mx-3">
     <div class="w-full px-3">
-        
-        {{-- Card 1: Header & Ringkasan Draf --}}
+
+        {{-- ─── Card 1: Header & Ringkasan ─── --}}
         <div class="detail-card">
-            <div class="flex justify-between items-center flex-wrap gap-4">
+            <div class="flex justify-between items-start flex-wrap gap-4 mb-4">
                 <div>
                     <h3 class="detail-title">{{ $draft['title'] }}</h3>
-                    <p class="detail-subtitle">Informasi detail mengenai usulan anggaran dan daftar pengadaan barang.</p>
+                    <p class="detail-subtitle">
+                        <i class="fas fa-hashtag mr-1" style="color:#adb5bd; font-size:.75rem;"></i>
+                        {{ $draft['code'] ?? 'Kode belum tersedia' }}
+                        &nbsp;·&nbsp;
+                        <i class="fas fa-calendar-alt mr-1" style="color:#adb5bd; font-size:.75rem;"></i>
+                        Tahun Anggaran {{ $draft['year'] }}
+                    </p>
                 </div>
                 <div>
                     @if(($draft['status'] ?? 'draft') === 'draft')
                     <span class="status-badge status-draft">
                         <span class="sb-dot"></span> Draft (Belum Diajukan)
                     </span>
-                    @else
+                    @elseif(($draft['status'] ?? 'draft') === 'submitted')
                     <span class="status-badge status-submitted">
                         <span class="sb-dot"></span> Sudah Diajukan (Terkunci)
+                    </span>
+                    @else
+                    <span class="status-badge status-approved">
+                        <span class="sb-dot"></span> Telah Diterima
                     </span>
                     @endif
                 </div>
             </div>
 
-            <div class="section-divider"></div>
-
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="info-box">
-                    <div class="info-box-icon"><i class="fas fa-calendar-alt"></i></div>
+                    <div class="info-box-icon"><i class="fas fa-boxes"></i></div>
                     <div>
-                        <p class="info-box-title">Tahun Anggaran</p>
-                        <p class="info-box-value">{{ $draft['year'] }}</p>
+                        <p class="info-box-title">Jumlah Item</p>
+                        <p class="info-box-value">{{ count($items) }} barang</p>
                     </div>
                 </div>
-
                 <div class="info-box">
                     <div class="info-box-icon"><i class="fas fa-wallet"></i></div>
                     <div>
                         <p class="info-box-title">Total Anggaran</p>
-                        <p class="info-box-value" style="color: #7928ca;">
-                            Rp {{ number_format($draft['total_price'] ?? collect($items)->sum(fn($i) => $i['price'] * $i['quantity']), 0, ',', '.') }}
+                        <p class="info-box-value" style="color:#7928ca;">
+                            Rp {{ number_format(collect($items)->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1)), 0, ',', '.') }}
                         </p>
                     </div>
                 </div>
-
                 <div class="info-box">
                     <div class="info-box-icon"><i class="fas fa-user"></i></div>
                     <div>
@@ -181,23 +319,22 @@
                         <p class="info-box-value">{{ $draft['creator_name'] ?? 'Kepala Lab' }}</p>
                     </div>
                 </div>
-
                 <div class="info-box">
                     <div class="info-box-icon"><i class="fas fa-clock"></i></div>
                     <div>
-                        <p class="info-box-title">Tanggal Pembuatan</p>
+                        <p class="info-box-title">Tanggal Dibuat</p>
                         <p class="info-box-value">
-                            {{ isset($draft['created_at']) ? \Carbon\Carbon::parse($draft['created_at'])->format('d M Y, H:i') : '-' }}
+                            {{ isset($draft['created_at']) ? \Carbon\Carbon::parse($draft['created_at'])->format('d M Y') : '-' }}
                         </p>
                     </div>
                 </div>
             </div>
         </div>
 
-        {{-- Card 2: Rincian Barang --}}
+        {{-- ─── Card 2: Rincian Barang ─── --}}
         <div class="detail-card">
-            <h4 class="detail-title text-base mb-4">
-                <i class="fas fa-boxes text-purple-700 mr-2"></i>
+            <h4 class="detail-title text-base" style="font-size:1rem; margin-bottom:1.25rem;">
+                <i class="fas fa-list-ul mr-2" style="color:#7928ca;"></i>
                 Rincian Barang yang Diusulkan
             </h4>
 
@@ -205,66 +342,101 @@
                 <table class="details-table">
                     <thead>
                         <tr>
-                            <th style="width: 50px; text-align: center;">No</th>
-                            <th style="width: 120px;">Tipe</th>
-                            <th>Nama Barang</th>
-                            <th style="text-align: right; width: 160px;">Harga Satuan</th>
-                            <th style="text-align: center; width: 80px;">Jumlah</th>
-                            <th style="text-align: right; width: 180px;">Total Harga</th>
-                            <th style="width: 220px;">Menggantikan Barang Lama</th>
-                            <th>Catatan</th>
-                            <th style="width: 140px; text-align: center;">Link</th>
+                            <th style="width:46px; text-align:center;">No</th>
+                            <th style="width:100px;">Tipe</th>
+                            <th style="min-width:200px;">Nama Barang</th>
+                            <th style="width:160px; text-align:right;">Harga Satuan</th>
+                            <th style="width:80px; text-align:center;">Qty</th>
+                            <th style="width:180px; text-align:right;">Total Harga</th>
+                            <th style="width:180px; text-align:center;">Link Pembelian</th>
+                            <th style="width:220px;">Menggantikan</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($items as $index => $item)
                         <tr>
-                            <td style="text-align: center; font-weight: 600;">{{ $index + 1 }}</td>
+                            {{-- No --}}
+                            <td class="col-no">{{ $index + 1 }}</td>
+
+                            {{-- Tipe --}}
                             <td>
-                                @if($item['item_type'] === 'inventaris')
+                                @if(($item['item_type'] ?? '') === 'inventaris')
                                     <span class="type-badge type-inventaris">Inventaris</span>
                                 @else
                                     <span class="type-badge type-bhp">BHP</span>
                                 @endif
                             </td>
-                            <td style="font-weight: 600; color: #344767;">{{ $item['name'] }}</td>
-                            <td style="text-align: right;">
-                                Rp {{ number_format($item['price'], 0, ',', '.') }}
-                            </td>
-                            <td style="text-align: center; font-weight: 600;">{{ $item['quantity'] }}</td>
-                            <td style="text-align: right; font-weight: 600; color: #344767;">
-                                Rp {{ number_format($item['price'] * $item['quantity'], 0, ',', '.') }}
-                            </td>
+
+                            {{-- Nama Barang --}}
                             <td>
-                                @if($item['replaced_asset_id'])
-                                    <div class="flex items-center gap-1.5 text-slate-700" style="font-size: .8rem;">
-                                        <i class="fas fa-exchange-alt text-amber-500"></i>
-                                        <span>
-                                            <strong>{{ $item['replaced_asset_name'] }}</strong><br>
-                                            <small class="text-slate-400">Code: {{ $item['replaced_asset_code'] ?? '-' }}</small>
-                                        </span>
-                                    </div>
-                                @else
-                                    <span class="text-slate-400 text-xs">-- Tidak Ada --</span>
+                                <p class="item-name">{{ $item['name'] }}</p>
+                                @if(!empty($item['notes']))
+                                    <p class="item-sub">
+                                        <i class="fas fa-sticky-note mr-1"></i>{{ $item['notes'] }}
+                                    </p>
                                 @endif
                             </td>
+
+                            {{-- Harga Satuan --}}
                             <td>
-                                <span class="text-xs">{{ $item['notes'] ?? '-' }}</span>
+                                <span class="price-cell">
+                                    Rp {{ number_format($item['price'] ?? 0, 0, ',', '.') }}
+                                </span>
+                                <span class="price-unit-label">per satuan</span>
                             </td>
-                            <td style="text-align: center;">
-                                @if($item['purchase_link'])
-                                    <a href="{{ $item['purchase_link'] }}" target="_blank" class="btn-link">
-                                        <i class="fas fa-shopping-cart text-xs"></i> Link Beli
+
+                            {{-- Qty --}}
+                            <td style="text-align:center;">
+                                <span class="qty-badge">{{ $item['quantity'] ?? 1 }}</span>
+                            </td>
+
+                            {{-- Total Harga --}}
+                            <td class="total-cell">
+                                <span class="total-amount">
+                                    Rp {{ number_format(($item['price'] ?? 0) * ($item['quantity'] ?? 1), 0, ',', '.') }}
+                                </span>
+                            </td>
+
+                            {{-- Link Pembelian --}}
+                            <td style="text-align:center;">
+                                @if(!empty($item['purchase_link']))
+                                    <a href="{{ $item['purchase_link'] }}"
+                                       target="_blank"
+                                       rel="noopener noreferrer"
+                                       class="btn-purchase-link">
+                                        <i class="fas fa-shopping-cart"></i>
+                                        Lihat Toko
+                                        <i class="fas fa-external-link-alt" style="font-size:.6rem;"></i>
                                     </a>
                                 @else
-                                    <span class="text-slate-400 text-xs">-</span>
+                                    <span class="no-link-text">Tidak ada link</span>
+                                @endif
+                            </td>
+
+                            {{-- Menggantikan Barang Lama --}}
+                            <td>
+                                @if(!empty($item['replaced_asset_id']))
+                                    <div class="replace-info">
+                                        <i class="fas fa-exchange-alt replace-icon"></i>
+                                        <div>
+                                            <div class="replace-name">{{ $item['replaced_asset_name'] ?? 'Aset Lama' }}</div>
+                                            @if(!empty($item['replaced_asset_code']))
+                                            <div class="replace-code">{{ $item['replaced_asset_code'] }}</div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @else
+                                    <span style="font-size:.75rem; color:#d2d6da; font-style:italic;">— Tidak Ada —</span>
                                 @endif
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="9" style="text-align: center;" class="py-4 text-slate-400">
-                                Belum ada rincian barang untuk draf pengadaan ini.
+                            <td colspan="8">
+                                <div class="empty-items">
+                                    <i class="fas fa-box-open" style="font-size:2.5rem; color:#d2d6da; display:block; margin-bottom:.75rem;"></i>
+                                    <p>Belum ada rincian barang untuk draf pengadaan ini.</p>
+                                </div>
                             </td>
                         </tr>
                         @endforelse
@@ -272,20 +444,46 @@
                 </table>
             </div>
 
+            {{-- Grand Total Bar --}}
+            @if(count($items) > 0)
+            <div class="grand-total-bar">
+                <div>
+                    <p class="grand-total-label">
+                        <i class="fas fa-calculator mr-1"></i>
+                        Total Keseluruhan Anggaran ({{ count($items) }} item)
+                    </p>
+                    <p class="grand-total-value">
+                        Rp {{ number_format(collect($items)->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1)), 0, ',', '.') }}
+                    </p>
+                </div>
+                <div style="text-align:right;">
+                    <p style="font-size:.7rem; color:#adb5bd; font-weight:600; text-transform:uppercase; margin-bottom:.25rem;">
+                        Rata-rata per item
+                    </p>
+                    <p style="font-size:.9rem; font-weight:700; color:#344767;">
+                        @php
+                            $total = collect($items)->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1));
+                            $avg   = count($items) > 0 ? $total / count($items) : 0;
+                        @endphp
+                        Rp {{ number_format($avg, 0, ',', '.') }}
+                    </p>
+                </div>
+            </div>
+            @endif
+
             <div class="section-divider"></div>
 
-            <div class="flex justify-between items-center">
+            <div class="flex justify-between items-center flex-wrap gap-3">
                 <a href="{{ route('kalab.procurement.index') }}" class="btn-back">
                     <i class="fas fa-arrow-left"></i> Kembali ke Daftar
                 </a>
 
                 @if(($draft['status'] ?? 'draft') === 'draft')
                 <a href="{{ route('kalab.procurement.edit', $draft['id']) }}" class="btn-edit-action">
-                    <i class="fas fa-edit"></i> Edit Draf Ini
+                    <i class="fas fa-pencil-alt"></i> Edit Draf Ini
                 </a>
                 @endif
             </div>
-
         </div>
 
     </div>

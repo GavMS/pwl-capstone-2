@@ -74,9 +74,9 @@
 .btn-add-item:hover { background: #dbeafe; }
 
 .btn-remove-item {
-    padding: .35rem .75rem; border-radius: .45rem; font-size: .75rem; font-weight: 600;
+    padding: .35rem .65rem; border-radius: .45rem; font-size: .8rem; font-weight: 600;
     background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;
-    display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
+    display: inline-flex; align-items: center; justify-content: center;
     cursor: pointer; transition: background .15s;
 }
 .btn-remove-item:hover { background: #fee2e2; }
@@ -163,11 +163,10 @@
                             <tr>
                                 <th style="width: 130px;">Tipe Barang</th>
                                 <th style="width: 220px;">Nama Barang</th>
-                                <th style="width: 140px;">Harga Satuan (Rp)</th>
+                                <th style="width: 150px;">Harga Satuan (Rp)</th>
                                 <th style="width: 80px;">Kuantitas</th>
-                                <th style="width: 160px;">Link Pembelian</th>
+                                <th style="width: 200px;">Link Pembelian</th>
                                 <th style="width: 200px;">Menggantikan Barang Lama</th>
-                                <th>Catatan</th>
                                 <th id="aksiHeader" style="width: 50px; text-align: center;">Aksi</th>
                             </tr>
                         </thead>
@@ -232,7 +231,7 @@ function addItemRow(data = null) {
     tr.className = 'item-row';
 
     // Opsi Dropdown Aset Pengganti
-    let assetOptions = '<option value="">-- Pilih Aset --</option>';
+    let assetOptions = '<option value="">-- Tidak Mengganti --</option>';
     assets.forEach(a => {
         const selected = (data && data.replaced_asset_id == a.id) ? 'selected' : '';
         assetOptions += `<option value="${a.id}" ${selected}>${a.name} (${a.code || 'Tanpa Kode'})</option>`;
@@ -246,7 +245,7 @@ function addItemRow(data = null) {
             </select>
         </td>
         <td>
-            <input type="text" name="items[${itemIndex}][name]" class="form-control" placeholder="Nama barang..." value="${data ? data.name : ''}" required>
+            <input type="text" name="items[${itemIndex}][name]" class="form-control" placeholder="Nama barang..." value="${data ? escHtml(data.name) : ''}" required>
         </td>
         <td>
             <input type="number" name="items[${itemIndex}][price]" class="form-control calc-trigger input-price" min="0" placeholder="0" value="${data ? data.price : '0'}" required>
@@ -255,19 +254,16 @@ function addItemRow(data = null) {
             <input type="number" name="items[${itemIndex}][quantity]" class="form-control calc-trigger input-qty" min="1" placeholder="1" value="${data ? data.quantity : '1'}" required>
         </td>
         <td>
-            <input type="url" name="items[${itemIndex}][purchase_link]" class="form-control" placeholder="https://..." value="${data ? (data.purchase_link || '') : ''}">
+            <input type="url" name="items[${itemIndex}][purchase_link]" class="form-control" placeholder="https://..." value="${data ? escHtml(data.purchase_link || '') : ''}">
         </td>
         <td>
             <select name="items[${itemIndex}][replaced_asset_id]" class="form-control">
                 ${assetOptions}
             </select>
         </td>
-        <td>
-            <input type="text" name="items[${itemIndex}][notes]" class="form-control" placeholder="Catatan/spesifikasi..." value="${data ? (data.notes || '') : ''}">
-        </td>
         <td class="aksi-col" style="text-align: center;">
-            <button type="button" class="btn-remove-item" onclick="removeItemRow(${itemIndex})">
-                <i class="fas fa-trash"></i> Hapus
+            <button type="button" class="btn-remove-item" onclick="removeItemRow(${itemIndex})" title="Hapus baris">
+                <i class="fas fa-trash"></i>
             </button>
         </td>
     `;
@@ -282,6 +278,12 @@ function addItemRow(data = null) {
     itemIndex++;
     calculateGrandTotal();
     updateRemoveButtonsVisibility();
+}
+
+// Helper: escape HTML agar aman dalam value attribute
+function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 // Fungsi Menghapus Baris Item
