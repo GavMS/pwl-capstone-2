@@ -72,13 +72,12 @@ class RoomManagementController extends Controller
     {
         $request->validate([
             'name'        => 'required|string|max:255',
-            'code'        => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
         try {
             $response = Http::withHeaders($this->authHeaders())
-                ->post("{$this->apiUrl()}/api/rooms", $request->only('name', 'code', 'description'));
+                ->post("{$this->apiUrl()}/api/rooms", $request->only('name', 'description'));
 
             if ($response->successful()) {
                 return redirect()->route('admin.rooms.index')
@@ -127,13 +126,12 @@ class RoomManagementController extends Controller
     {
         $request->validate([
             'name'        => 'required|string|max:255',
-            'code'        => 'required|string|max:255',
             'description' => 'nullable|string',
         ]);
 
         try {
             $response = Http::withHeaders($this->authHeaders())
-                ->put("{$this->apiUrl()}/api/rooms/{$id}", $request->only('name', 'code', 'description'));
+                ->put("{$this->apiUrl()}/api/rooms/{$id}", $request->only('name', 'description'));
 
             if ($response->successful()) {
                 return redirect()->route('admin.rooms.index')

@@ -169,51 +169,42 @@ textarea.form-input { padding:.75rem .875rem .75rem 2.75rem; resize:vertical; mi
                 {{-- ── Section: Identitas Ruangan ── --}}
                 <p class="section-label"><i class="fas fa-door-open"></i> Identitas Ruangan</p>
 
-                <div class="form-grid">
-
-                    {{-- Nama Ruangan --}}
-                    <div class="field-group col-full">
-                        <label class="field-label" for="name">
-                            Nama Ruangan <span class="req">*</span>
-                        </label>
-                        <div class="input-wrap">
-                            <i class="fas fa-door-open input-icon"></i>
-                            <input type="text" id="name" name="name" class="form-input"
-                                   value="{{ old('name', $editRoom['name'] ?? '') }}"
-                                   placeholder="Contoh: Laboratorium Komputer, Ruang Server..."
-                                   required autocomplete="off" />
-                        </div>
+                {{-- Nama Ruangan --}}
+                <div class="field-group">
+                    <label class="field-label" for="name">
+                        Nama Ruangan <span class="req">*</span>
+                    </label>
+                    <div class="input-wrap">
+                        <i class="fas fa-door-open input-icon"></i>
+                        <input type="text" id="name" name="name" class="form-input"
+                               value="{{ old('name', $editRoom['name'] ?? '') }}"
+                               placeholder="Contoh: Laboratorium Komputer, Ruang Server..."
+                               required autocomplete="off" />
                     </div>
+                    <p class="field-hint"><i class="fas fa-info-circle"></i> Nama harus unik. Kode ruangan akan digenerate otomatis.</p>
+                </div>
 
-                    {{-- Kode Ruangan --}}
-                    <div class="field-group">
-                        <label class="field-label" for="code">
-                            Kode Ruangan <span class="req">*</span>
-                        </label>
-                        <div class="input-wrap">
-                            <i class="fas fa-tag input-icon"></i>
-                            <input type="text" id="code" name="code" class="form-input form-input-mono"
-                                   value="{{ old('code', $editRoom['code'] ?? '') }}"
-                                   placeholder="LAB-01"
-                                   required autocomplete="off"
-                                   oninput="this.value=this.value.toUpperCase()" />
-                        </div>
-                        <p class="field-hint"><i class="fas fa-info-circle"></i> Kode harus unik. Akan otomatis diubah ke huruf kapital.</p>
+                @if(isset($editRoom))
+                <div class="field-group">
+                    <label class="field-label">Kode Ruangan</label>
+                    <div style="padding:.625rem .875rem; background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:.65rem; font-family:monospace; font-size:.875rem; color:#7b809a; letter-spacing:.05em;">
+                        {{ $editRoom['code'] ?? '-' }}
                     </div>
+                    <p class="field-hint"><i class="fas fa-lock"></i> Kode tidak dapat diubah setelah ruangan dibuat.</p>
+                </div>
+                @endif
 
-                    {{-- Deskripsi --}}
-                    <div class="field-group">
-                        <label class="field-label" for="description">
-                            Deskripsi / Keterangan <span class="opt">(Opsional)</span>
-                        </label>
-                        <div class="input-wrap" style="position:relative;">
-                            <i class="fas fa-align-left input-icon-top"></i>
-                            <textarea id="description" name="description"
-                                      class="form-input"
-                                      placeholder="Contoh: Digunakan untuk praktikum jaringan komputer, kapasitas 30 orang...">{{ old('description', $editRoom['description'] ?? '') }}</textarea>
-                        </div>
+                {{-- Deskripsi --}}
+                <div class="field-group">
+                    <label class="field-label" for="description">
+                        Deskripsi / Keterangan <span class="opt">(Opsional)</span>
+                    </label>
+                    <div class="input-wrap" style="position:relative;">
+                        <i class="fas fa-align-left input-icon-top"></i>
+                        <textarea id="description" name="description"
+                                  class="form-input"
+                                  placeholder="Contoh: Digunakan untuk praktikum jaringan komputer, kapasitas 30 orang...">{{ old('description', $editRoom['description'] ?? '') }}</textarea>
                     </div>
-
                 </div>
 
                 {{-- ── Actions ── --}}

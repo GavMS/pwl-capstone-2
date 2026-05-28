@@ -1,6 +1,30 @@
 const db = require('../config/db');
 
 // ─────────────────────────────────────────────────────────
+// Helper: generate kode ruangan otomatis
+// ─────────────────────────────────────────────────────────
+function generateRoomCode(name, existingCodes = []) {
+    const prefixMap = {
+        'laboratorium': 'LAB',
+        'gudang': 'GDG',
+        'ruangan': 'RNG',
+        'ruang': 'RNG',
+        'studio': 'STD',
+    };
+    const words = name.toLowerCase().split(/\s+/);
+    const prefix = prefixMap[words[0]] ?? words[0].slice(0, 3).toUpperCase();
+    const keyword = words.slice(1)
+        .filter(w => !['dan','untuk','ke','di','yang','1','2','3','4','5','6','7','8','9'].includes(w))
+        .map(w => w.slice(0, 3).toUpperCase())
+        .slice(0, 2)
+        .join('-');
+    const base = keyword ? `${prefix}-${keyword}` : prefix;
+    let seq = 1;
+    while (existingCodes.includes(`${base}-${String(seq).padStart(2, '0')}`)) seq++;
+    return `${base}-${String(seq).padStart(2, '0')}`;
+}
+
+// ─────────────────────────────────────────────────────────
 // Helper: cek dependensi sebelum delete/edit
 // ─────────────────────────────────────────────────────────
 async function checkRoomDependencies(roomId) {
@@ -121,25 +145,26 @@ exports.checkEdit = async (req, res) => {
 // POST /api/rooms — tambah ruangan baru
 // ─────────────────────────────────────────────────────────
 exports.create = async (req, res) => {
-    const { name, code, description } = req.body;
+    const { name, description } = req.body;
 
     if (!name || !name.trim()) {
         return res.status(400).json({ message: 'Nama ruangan wajib diisi' });
     }
-    if (!code || !code.trim()) {
-        return res.status(400).json({ message: 'Kode ruangan wajib diisi' });
-    }
 
     try {
-        // Cek duplikat kode
-        const [existing] = await db.query('SELECT id FROM rooms WHERE code = ?', [code.trim()]);
-        if (existing.length > 0) {
-            return res.status(409).json({ message: `Kode ruangan "${code.trim()}" sudah digunakan` });
+        // Cek duplikat nama
+        const [existingName] = await db.query('SELECT id FROM rooms WHERE name = ?', [name.trim()]);
+        if (existingName.length > 0) {
+            return res.status(409).json({ message: `Nama ruangan "${name.trim()}" sudah digunakan` });
         }
+
+        // Generate kode otomatis
+        const [existingRooms] = await db.query('SELECT code FROM rooms');
+        const code = generateRoomCode(name.trim(), existingRooms.map(r => r.code));
 
         const [result] = await db.query(
             'INSERT INTO rooms (name, code, description) VALUES (?, ?, ?)',
-            [name.trim(), code.trim().toUpperCase(), description?.trim() || null]
+            [name.trim(), code, description?.trim() || null]
         );
 
         const [newRoom] = await db.query('SELECT * FROM rooms WHERE id = ?', [result.insertId]);
@@ -147,7 +172,7 @@ exports.create = async (req, res) => {
     } catch (error) {
         console.error('create room error:', error);
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ message: 'Kode ruangan sudah digunakan' });
+            return res.status(409).json({ message: 'Nama ruangan sudah digunakan' });
         }
         res.status(500).json({ message: 'Server error' });
     }
@@ -157,32 +182,28 @@ exports.create = async (req, res) => {
 // PUT /api/rooms/:id — update ruangan
 // ─────────────────────────────────────────────────────────
 exports.update = async (req, res) => {
-    const { name, code, description } = req.body;
+    const { name, description } = req.body;
     const { id } = req.params;
 
     if (!name || !name.trim()) {
         return res.status(400).json({ message: 'Nama ruangan wajib diisi' });
     }
-    if (!code || !code.trim()) {
-        return res.status(400).json({ message: 'Kode ruangan wajib diisi' });
-    }
 
     try {
-        // Cek ruangan ada
         const [rows] = await db.query('SELECT id FROM rooms WHERE id = ?', [id]);
         if (rows.length === 0) return res.status(404).json({ message: 'Ruangan tidak ditemukan' });
 
-        // Cek duplikat kode (exclude self)
-        const [existing] = await db.query(
-            'SELECT id FROM rooms WHERE code = ? AND id != ?', [code.trim(), id]
+        // Cek duplikat nama (exclude self)
+        const [existingName] = await db.query(
+            'SELECT id FROM rooms WHERE name = ? AND id != ?', [name.trim(), id]
         );
-        if (existing.length > 0) {
-            return res.status(409).json({ message: `Kode ruangan "${code.trim()}" sudah digunakan` });
+        if (existingName.length > 0) {
+            return res.status(409).json({ message: `Nama ruangan "${name.trim()}" sudah digunakan` });
         }
 
         await db.query(
-            'UPDATE rooms SET name = ?, code = ?, description = ?, updated_at = NOW() WHERE id = ?',
-            [name.trim(), code.trim().toUpperCase(), description?.trim() || null, id]
+            'UPDATE rooms SET name = ?, description = ?, updated_at = NOW() WHERE id = ?',
+            [name.trim(), description?.trim() || null, id]
         );
 
         const [updated] = await db.query('SELECT * FROM rooms WHERE id = ?', [id]);
@@ -190,7 +211,7 @@ exports.update = async (req, res) => {
     } catch (error) {
         console.error('update room error:', error);
         if (error.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ message: 'Kode ruangan sudah digunakan' });
+            return res.status(409).json({ message: 'Nama ruangan sudah digunakan' });
         }
         res.status(500).json({ message: 'Server error' });
     }

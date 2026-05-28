@@ -56,6 +56,12 @@ cd project/backend
 npm start
 ```
 
+**RESET DB:***
+```
+npm run seed	Truncate semua tabel → insert ulang dummy data (cepat, tabel tetap ada)
+npm run reset
+```
+
 **Terminal 2:**
 ```bash
 cd project/frontend

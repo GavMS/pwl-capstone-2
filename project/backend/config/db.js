@@ -113,13 +113,24 @@ const testConnection = async () => {
         await connection.query(`
             CREATE TABLE IF NOT EXISTS rooms (
                 id BIGINT AUTO_INCREMENT PRIMARY KEY,
-                name VARCHAR(255) NOT NULL,
+                name VARCHAR(255) NOT NULL UNIQUE,
                 code VARCHAR(255) NOT NULL UNIQUE,
                 description TEXT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
             )
         `);
+
+        // Safe migration: tambah UNIQUE pada rooms.name jika belum ada
+        const [roomNameIdx] = await connection.query(`
+            SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'rooms'
+            AND COLUMN_NAME = 'name' AND NON_UNIQUE = 0
+        `);
+        if (roomNameIdx.length === 0) {
+            await connection.query(`ALTER TABLE rooms ADD UNIQUE INDEX idx_rooms_name (name)`);
+            console.log('Added UNIQUE constraint on rooms.name.');
+        }
 
         // Insert dummy rooms if not exist
         const [roomsCheck] = await connection.query('SELECT * FROM rooms');
