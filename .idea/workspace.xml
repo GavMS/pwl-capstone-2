@@ -3,17 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="40e16c3d-481a-4218-8411-95fb6a0698ea" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/project/backend/config/db.js" beforeDir="false" afterPath="$PROJECT_DIR$/project/backend/config/db.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/project/backend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/project/backend/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/project/backend/seeders/seed.js" beforeDir="false" afterPath="$PROJECT_DIR$/project/backend/seeders/seed.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/project/backend/server.js" beforeDir="false" afterPath="$PROJECT_DIR$/project/backend/server.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/project/frontend/app/Http/Controllers/ProcurementController.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/app/Http/Controllers/ProcurementController.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/project/frontend/resources/views/dashboard/layout.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/resources/views/dashboard/layout.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/project/frontend/resources/views/kalab/procurement/form.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/resources/views/kalab/procurement/form.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/project/frontend/resources/views/kalab/procurement/index.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/resources/views/kalab/procurement/index.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/project/frontend/resources/views/kalab/procurement/show.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/resources/views/kalab/procurement/show.blade.php" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/project/frontend/routes/web.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/routes/web.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,7 +59,8 @@
       <workItem from="1779337876474" duration="1347000" />
       <workItem from="1779437696343" duration="9000" />
       <workItem from="1779891774795" duration="1555000" />
-      <workItem from="1779940005208" duration="1731000" />
+      <workItem from="1779940005208" duration="1805000" />
+      <workItem from="1779956864105" duration="27000" />
     </task>
     <servers />
   </component>
