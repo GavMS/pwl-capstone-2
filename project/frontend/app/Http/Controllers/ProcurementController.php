@@ -72,7 +72,7 @@ class ProcurementController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'year'  => 'required|integer|min:2020|max:2100',
-            'status'=> 'required|string|in:draft,submitted',
+            'status'=> 'required|string|in:draft,submitted,approved',
             'items' => 'required|array',
             'items.*.name' => 'required|string|max:255',
             'items.*.item_type' => 'required|string|in:inventaris,bhp',
@@ -167,7 +167,7 @@ class ProcurementController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'year'  => 'required|integer|min:2020|max:2100',
-            'status'=> 'required|string|in:draft,submitted',
+            'status'=> 'required|string|in:draft,submitted,approved',
             'items' => 'required|array',
             'items.*.name' => 'required|string|max:255',
             'items.*.item_type' => 'required|string|in:inventaris,bhp',
