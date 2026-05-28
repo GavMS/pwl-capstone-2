@@ -220,25 +220,29 @@
 
                 @if(isset($user['role']) && $user['role'] === 'Administrator')
                 <li class="mt-0.5 w-full">
-                    <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors text-slate-600 hover:text-slate-900" href="#">
-                        <div class="shadow-soft-md mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5">
-                            <i class="fas fa-users text-slate-700 text-xs"></i>
+                    <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors text-slate-600 hover:text-slate-900 {{ request()->routeIs('admin.users.*') ? 'active-nav-item' : '' }}"
+                       href="{{ route('admin.users.index') }}">
+                        <div class="shadow-soft-md mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5 {{ request()->routeIs('admin.users.*') ? 'active-icon' : '' }}">
+                            <i class="fas fa-users {{ request()->routeIs('admin.users.*') ? 'text-white' : 'text-slate-700' }} text-xs"></i>
                         </div>
                         <span class="ml-1 duration-300 opacity-100 pointer-events-none ease-soft">Manajemen User</span>
                     </a>
                 </li>
                 @endif
 
-                @if(isset($user['role']) && in_array($user['role'], ['Administrator', 'Staf Laboratorium', 'Kepala Laboratorium']))
+                @if(isset($user['role']) && $user['role'] === 'Administrator')
                 <li class="mt-0.5 w-full">
-                    <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors text-slate-600 hover:text-slate-900" href="#">
-                        <div class="shadow-soft-md mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5">
-                            <i class="fas fa-door-open text-slate-700 text-xs"></i>
+                    <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors text-slate-600 hover:text-slate-900 {{ request()->routeIs('admin.rooms.*') ? 'active-nav-item' : '' }}"
+                       href="{{ route('admin.rooms.index') }}">
+                        <div class="shadow-soft-md mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5 {{ request()->routeIs('admin.rooms.*') ? 'active-icon' : '' }}">
+                            <i class="fas fa-door-open {{ request()->routeIs('admin.rooms.*') ? 'text-white' : 'text-slate-700' }} text-xs"></i>
                         </div>
                         <span class="ml-1 duration-300 opacity-100 pointer-events-none ease-soft">Manajemen Ruang</span>
                     </a>
                 </li>
+                @endif
 
+                @if(isset($user['role']) && $user['role'] === 'Administrator')
                 <li class="mt-0.5 w-full">
                     <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors text-slate-600 hover:text-slate-900" href="#">
                         <div class="shadow-soft-md mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5">
@@ -256,6 +260,18 @@
                             <i class="fas fa-chart-line text-slate-700 text-xs"></i>
                         </div>
                         <span class="ml-1 duration-300 opacity-100 pointer-events-none ease-soft">Laporan & Statistik</span>
+                    </a>
+                </li>
+                @endif
+
+                @if(isset($user['role']) && $user['role'] === 'Kepala Laboratorium')
+                <li class="mt-0.5 w-full">
+                    <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors text-slate-600 hover:text-slate-900 {{ request()->routeIs('kalab.procurement.*') ? 'active-nav-item' : '' }}"
+                       href="{{ route('kalab.procurement.index') }}">
+                        <div class="shadow-soft-md mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5 {{ request()->routeIs('kalab.procurement.*') ? 'active-icon' : '' }}">
+                            <i class="fas fa-file-invoice {{ request()->routeIs('kalab.procurement.*') ? 'text-white' : 'text-slate-700' }} text-xs"></i>
+                        </div>
+                        <span class="ml-1 duration-300 opacity-100 pointer-events-none ease-soft">Draf Pengadaan</span>
                     </a>
                 </li>
                 @endif
