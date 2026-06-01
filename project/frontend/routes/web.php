@@ -7,6 +7,7 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\RoomManagementController;
 use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\InventoryController;
+use App\Http\Controllers\StafAdminController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -65,3 +66,10 @@ Route::prefix('kalab')->middleware('role:Kepala Laboratorium')->group(function (
     Route::get('/bhp',                      [InventoryController::class, 'consumables'])->name('kalab.bhp.index');
 });
 
+// ─────────────────────────────────────────────
+// Staf Administrasi: Lihat Draf Pengadaan Disetujui
+// ─────────────────────────────────────────────
+Route::prefix('stafadmin')->middleware('role:Staf Administrasi')->group(function () {
+    Route::get('/procurement',        [StafAdminController::class, 'index'])->name('stafadmin.procurement.index');
+    Route::get('/procurement/{id}',   [StafAdminController::class, 'show'])->name('stafadmin.procurement.show');
+});
