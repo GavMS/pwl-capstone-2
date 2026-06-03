@@ -72,4 +72,5 @@ Route::prefix('kalab')->middleware('role:Kepala Laboratorium')->group(function (
 Route::prefix('stafadmin')->middleware('role:Staf Administrasi')->group(function () {
     Route::get('/procurement',        [StafAdminController::class, 'index'])->name('stafadmin.procurement.index');
     Route::get('/procurement/{id}',   [StafAdminController::class, 'show'])->name('stafadmin.procurement.show');
+    Route::get('/inventaris',         [StafAdminController::class, 'inventaris'])->name('stafadmin.inventaris.index');
 });
