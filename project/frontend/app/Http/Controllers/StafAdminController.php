@@ -88,4 +88,58 @@ class StafAdminController extends Controller
             'items' => $items,
         ]);
     }
+
+    // ─────────────────────────────────────────────
+    // GET /stafadmin/inventaris — Daftar barang inventaris dari semua draf disetujui
+    // ─────────────────────────────────────────────
+    public function inventaris()
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->get("{$this->apiUrl()}/api/procurement");
+
+            if (in_array($response->status(), [401, 403])) {
+                Session::forget('token');
+                Session::forget('user');
+                return redirect()->route('login')
+                    ->withErrors(['email' => 'Sesi Anda telah berakhir. Silakan login kembali.']);
+            }
+
+            $allDrafts = $response->successful() ? ($response->json()['drafts'] ?? []) : [];
+
+            // Filter hanya draf approved
+            $approvedDrafts = array_values(array_filter($allDrafts, fn($d) => ($d['status'] ?? '') === 'approved'));
+
+            // Kumpulkan semua item inventaris dari setiap draf approved
+            $inventarisItems = [];
+            foreach ($approvedDrafts as $draft) {
+                $detailResp = Http::withHeaders($this->authHeaders())
+                    ->get("{$this->apiUrl()}/api/procurement/{$draft['id']}");
+
+                if (!$detailResp->successful()) continue;
+
+                $items = $detailResp->json()['items'] ?? [];
+                foreach ($items as $index => $item) {
+                    if (($item['item_type'] ?? '') === 'inventaris') {
+                        $item['draft_id']    = $draft['id'];
+                        $item['draft_title'] = $draft['title'];
+                        $item['draft_year']  = $draft['year'];
+                        $item['original_index'] = $index;
+                        $inventarisItems[]   = $item;
+                    }
+                }
+            }
+
+            $error = $response->successful() ? null : ($response->json()['message'] ?? 'Gagal mengambil data.');
+        } catch (\Exception $e) {
+            $inventarisItems = [];
+            $error = 'Tidak dapat terhubung ke server backend. Pastikan server Node.js berjalan.';
+        }
+
+        return view('stafadmin.inventaris.index', [
+            'user'            => Session::get('user', []),
+            'inventarisItems' => $inventarisItems,
+            'error'           => $error ?? null,
+        ]);
+    }
 }

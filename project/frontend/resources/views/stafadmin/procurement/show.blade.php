@@ -288,6 +288,18 @@
 }
 .btn-print-label:hover  { opacity: .88; transform: translateY(-1px); }
 .btn-print-label:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+/* ─── Btn Cetak Semua ───────────────────────────────── */
+.btn-print-all {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .55rem 1.25rem; font-size: .8125rem; font-weight: 700;
+    color: #fff;
+    background: linear-gradient(310deg, #7928ca, #ff0080);
+    border: none; border-radius: .5rem; cursor: pointer;
+    transition: opacity .15s, transform .1s, box-shadow .15s;
+    box-shadow: 0 4px 12px -2px rgba(121,40,202,.4);
+    white-space: nowrap;
+}
+.btn-print-all:hover { opacity: .88; transform: translateY(-2px); box-shadow: 0 8px 20px -4px rgba(121,40,202,.5); }
 </style>
 
 <div class="flex flex-wrap -mx-3">
@@ -554,6 +566,25 @@
                 <a href="{{ route('stafadmin.procurement.index') }}" class="btn-back">
                     <i class="fas fa-arrow-left"></i> Kembali ke Daftar
                 </a>
+
+                @if(collect($items)->where('item_type', 'inventaris')->count() > 0)
+                <button
+                    type="button"
+                    class="btn-print-all"
+                    onclick="printAllLabels()"
+                    id="btnPrintAll"
+                >
+                    <i class="fas fa-print"></i>
+                    Cetak Semua Label Inventaris
+                    <span
+                        style="
+                            background:rgba(255,255,255,.25); border-radius:.3rem;
+                            padding:.1rem .45rem; font-size:.7rem;
+                        "
+                        id="btnPrintAllCount"
+                    >0</span>
+                </button>
+                @endif
             </div>
         </div>
 
@@ -570,7 +601,7 @@
         <div class="qr-modal-subtitle" id="qrModalItemName">Nama Barang</div>
 
         <div class="qr-canvas-wrap">
-            <canvas id="qrCanvas"></canvas>
+            <div id="qrCanvas"></div>
         </div>
 
         <div class="qr-label-code" id="qrLabelCode">&mdash;</div>
@@ -612,6 +643,7 @@ function generateLabel(index, year) {
     const num   = String(order).padStart(3, '0');
     input.value = `INV-${year}-${num}`;
     input.classList.add('has-value');
+    localStorage.setItem('label_' + '{{ $draft['id'] }}' + '_' + index, input.value);
     updateLabelCounter();
 }
 
@@ -624,15 +656,35 @@ function updateLabelCounter() {
         if (input.value.trim() !== '') filled++;
     });
     counter.textContent = filled;
+
+    // Sync badge di tombol Cetak Semua
+    const badge = document.getElementById('btnPrintAllCount');
+    if (badge) badge.textContent = filled;
 }
 
-// Dengarkan perubahan manual
+// Dengarkan perubahan manual & load dari localStorage
+document.addEventListener('DOMContentLoaded', () => {
+    inventarisInputs.forEach(input => {
+        const index = input.dataset.index;
+        const saved = localStorage.getItem('label_' + '{{ $draft['id'] }}' + '_' + index);
+        if (saved) {
+            input.value = saved;
+            input.classList.add('has-value');
+        }
+    });
+    updateLabelCounter();
+});
+
 inventarisInputs.forEach(input => {
     input.addEventListener('input', function () {
-        if (this.value.trim() !== '') {
+        const index = this.dataset.index;
+        const val = this.value.trim();
+        if (val !== '') {
             this.classList.add('has-value');
+            localStorage.setItem('label_' + '{{ $draft['id'] }}' + '_' + index, val);
         } else {
             this.classList.remove('has-value');
+            localStorage.removeItem('label_' + '{{ $draft['id'] }}' + '_' + index);
         }
         updateLabelCounter();
     });
@@ -659,8 +711,7 @@ function openQrModal(index) {
     const btnPrint  = document.getElementById('btnPrintLabel');
 
     // Bersihkan QR sebelumnya
-    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-    canvas.width = 0; canvas.height = 0;
+    canvas.innerHTML = '';
 
     if (labelVal) {
         emptyHint.style.display = 'none';
