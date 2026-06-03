@@ -352,6 +352,7 @@
                             <th style="width:110px;">Tahun</th>
                             <th style="min-width:220px;">Nama Barang / Pengadaan</th>
                             <th style="width:80px; text-align:center;">Qty</th>
+                            <th style="width:160px; text-align:center;">Tgl. Diterima</th>
                             <th style="width:230px;">Input Label</th>
                             <th style="width:140px; text-align:center;">Status</th>
                         </tr>
@@ -388,6 +389,18 @@
                                 </span>
                             </td>
 
+                            {{-- Tgl. Diterima --}}
+                            <td style="text-align:center;">
+                                <input
+                                    type="date"
+                                    class="receive-date-input"
+                                    id="receive-date-{{ $item['draft_id'] }}-{{ $item['original_index'] }}"
+                                    data-draft-id="{{ $item['draft_id'] }}"
+                                    data-index="{{ $item['original_index'] }}"
+                                    style="padding: .35rem .6rem; font-size: .75rem; border: 1px solid #d2d6da; border-radius: .375rem; color: #495057; outline: none; width: 135px;"
+                                />
+                            </td>
+
                             {{-- Input Label --}}
                             <td>
                                 <div class="label-input-wrap">
@@ -405,6 +418,7 @@
                                     <button
                                         type="button"
                                         class="btn-generate"
+                                        id="btn-gen-{{ $item['draft_id'] }}-{{ $item['original_index'] }}"
                                         onclick="generateLabel('{{ $item['draft_id'] }}', {{ $item['original_index'] }}, {{ $item['draft_year'] }})"
                                         title="Auto-generate nomor label"
                                     >
@@ -434,7 +448,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6">
+                            <td colspan="7">
                                 <div class="empty-state">
                                     <i class="fas fa-box-open" style="font-size:2.5rem; color:#cbd5e1; display:block; margin-bottom:.75rem;"></i>
                                     <p>Tidak ada data inventaris yang ditemukan.</p>
@@ -485,13 +499,40 @@
 <script>
 // ─── Label Numbering & Storage ─────────────────────────────────────────────
 const labelInputs = document.querySelectorAll('.label-input');
+const receiveDateInputs = document.querySelectorAll('.receive-date-input');
 
 // Simpan data label terpilih untuk single print
 let _currentPrintLabel = '';
 let _currentPrintName  = '';
 
+function syncRowLabelState(draftId, index) {
+    const dateInput = document.getElementById(`receive-date-${draftId}-${index}`);
+    const labelInput = document.getElementById(`label-${draftId}-${index}`);
+    const btnGen = document.getElementById(`btn-gen-${draftId}-${index}`);
+    const btnQr = document.getElementById(`btn-qr-${draftId}-${index}`);
+
+    if (!labelInput) return;
+
+    const hasDate = dateInput && dateInput.value !== '';
+    labelInput.disabled = !hasDate;
+    if (btnGen) btnGen.disabled = !hasDate;
+    if (btnQr) btnQr.disabled = !hasDate;
+
+    if (!hasDate) {
+        labelInput.value = '';
+        labelInput.classList.remove('has-value');
+        localStorage.removeItem('label_' + draftId + '_' + index);
+        updateRowStatus(draftId, index, false);
+        labelInput.placeholder = "Isi Tgl. Diterima";
+    } else {
+        const year = labelInput.dataset.year;
+        labelInput.placeholder = `INV-${year}-...`;
+    }
+}
+
 // Load data saat halaman siap
 document.addEventListener('DOMContentLoaded', () => {
+    // Load labels
     labelInputs.forEach(input => {
         const draftId = input.dataset.draftId;
         const index   = input.dataset.index;
@@ -505,6 +546,24 @@ document.addEventListener('DOMContentLoaded', () => {
             updateRowStatus(draftId, index, false);
         }
     });
+
+    // Load receive dates
+    receiveDateInputs.forEach(input => {
+        const draftId = input.dataset.draftId;
+        const index   = input.dataset.index;
+        const saved   = localStorage.getItem('receive_date_' + draftId + '_' + index);
+        if (saved) {
+            input.value = saved;
+        }
+    });
+
+    // Sync states
+    labelInputs.forEach(input => {
+        const draftId = input.dataset.draftId;
+        const index   = input.dataset.index;
+        syncRowLabelState(draftId, index);
+    });
+
     updateBulkButtonState();
 });
 
@@ -539,6 +598,23 @@ labelInputs.forEach(input => {
             updateRowStatus(draftId, index, false);
         }
         updateBulkButtonState();
+    });
+});
+
+// Dengarkan perubahan tanggal penerimaan
+receiveDateInputs.forEach(input => {
+    input.addEventListener('change', function () {
+        const draftId = this.dataset.draftId;
+        const index   = this.dataset.index;
+        const val     = this.value;
+
+        if (val) {
+            localStorage.setItem('receive_date_' + draftId + '_' + index, val);
+        } else {
+            localStorage.removeItem('receive_date_' + draftId + '_' + index);
+        }
+        syncRowLabelState(draftId, index);
+        updateBulkButtonState(); // sync bulk print counter too
     });
 });
 

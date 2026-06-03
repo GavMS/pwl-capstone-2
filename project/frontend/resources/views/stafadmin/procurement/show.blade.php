@@ -388,6 +388,7 @@
                             <th style="width:180px; text-align:right;">Total Harga</th>
                             <th style="width:180px; text-align:center;">Link Pembelian</th>
                             <th style="width:220px;">Menggantikan</th>
+                            <th style="width:160px; text-align:center;">Tgl. Diterima</th>
                             <th style="width:210px;">No. Label</th>
                         </tr>
                     </thead>
@@ -468,6 +469,18 @@
                                 @endif
                             </td>
 
+                            {{-- Tgl. Diterima --}}
+                            <td style="text-align:center;">
+                                <input
+                                    type="date"
+                                    class="receive-date-input"
+                                    id="receive-date-{{ $index }}"
+                                    data-index="{{ $index }}"
+                                    data-draft-id="{{ $draft['id'] }}"
+                                    style="padding: .35rem .6rem; font-size: .75rem; border: 1px solid #d2d6da; border-radius: .375rem; color: #495057; outline: none; width:135px;"
+                                />
+                            </td>
+
                             {{-- No. Label --}}
                             <td>
                                 @if(($item['item_type'] ?? '') === 'inventaris')
@@ -485,6 +498,7 @@
                                         <button
                                             type="button"
                                             class="btn-generate"
+                                            id="btn-gen-{{ $index }}"
                                             onclick="generateLabel({{ $index }}, {{ $draft['year'] }})"
                                             title="Auto-generate nomor label"
                                         >
@@ -507,7 +521,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="9">
+                            <td colspan="10">
                                 <div class="empty-items">
                                     <i class="fas fa-box-open" style="font-size:2.5rem; color:#d2d6da; display:block; margin-bottom:.75rem;"></i>
                                     <p>Belum ada rincian barang untuk draf pengadaan ini.</p>
@@ -663,7 +677,33 @@ function updateLabelCounter() {
 }
 
 // Dengarkan perubahan manual & load dari localStorage
+const receiveDateInputs = document.querySelectorAll('.receive-date-input');
+
+function syncRowLabelState(index) {
+    const dateInput = document.getElementById('receive-date-' + index);
+    const labelInput = document.getElementById('label-' + index);
+    const btnGen = document.getElementById('btn-gen-' + index);
+    const btnQr = document.getElementById('btn-qr-' + index);
+
+    if (!labelInput) return;
+
+    const hasDate = dateInput && dateInput.value !== '';
+    labelInput.disabled = !hasDate;
+    if (btnGen) btnGen.disabled = !hasDate;
+    if (btnQr) btnQr.disabled = !hasDate;
+
+    if (!hasDate) {
+        labelInput.value = '';
+        labelInput.classList.remove('has-value');
+        localStorage.removeItem('label_' + '{{ $draft['id'] }}' + '_' + index);
+        labelInput.placeholder = "Isi Tgl. Diterima";
+    } else {
+        labelInput.placeholder = "INV-{{ $draft['year'] }}-...";
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Load label inputs
     inventarisInputs.forEach(input => {
         const index = input.dataset.index;
         const saved = localStorage.getItem('label_' + '{{ $draft['id'] }}' + '_' + index);
@@ -671,6 +711,18 @@ document.addEventListener('DOMContentLoaded', () => {
             input.value = saved;
             input.classList.add('has-value');
         }
+    });
+    // Load receive date inputs
+    receiveDateInputs.forEach(input => {
+        const index = input.dataset.index;
+        const saved = localStorage.getItem('receive_date_' + '{{ $draft['id'] }}' + '_' + index);
+        if (saved) {
+            input.value = saved;
+        }
+    });
+    // Sync states
+    inventarisInputs.forEach(input => {
+        syncRowLabelState(input.dataset.index);
     });
     updateLabelCounter();
 });
@@ -687,6 +739,20 @@ inventarisInputs.forEach(input => {
             localStorage.removeItem('label_' + '{{ $draft['id'] }}' + '_' + index);
         }
         updateLabelCounter();
+    });
+});
+
+receiveDateInputs.forEach(input => {
+    input.addEventListener('change', function () {
+        const index = this.dataset.index;
+        const val = this.value;
+        if (val) {
+            localStorage.setItem('receive_date_' + '{{ $draft['id'] }}' + '_' + index, val);
+        } else {
+            localStorage.removeItem('receive_date_' + '{{ $draft['id'] }}' + '_' + index);
+        }
+        syncRowLabelState(index);
+        updateLabelCounter(); // sync bulk print counter too
     });
 });
 
