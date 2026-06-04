@@ -204,27 +204,7 @@
                 </li>
                 @endif
                 
-                @if(isset($user['role']) && $user['role'] === 'Kepala Laboratorium')
-                <li class="mt-0.5 w-full">
-                    <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors {{ request()->routeIs('kalab.inventaris.*') ? 'active-nav-item' : 'text-slate-600 hover:text-slate-900' }}"
-                       href="{{ route('kalab.inventaris.index') }}">
-                        <div class="nav-icon mr-2 flex h-8 w-8 items-center justify-center rounded-lg {{ request()->routeIs('kalab.inventaris.*') ? 'active-icon' : '' }}">
-                            <i class="fas fa-box-open {{ request()->routeIs('kalab.inventaris.*') ? 'text-white' : 'text-slate-700' }} text-sm"></i>
-                        </div>
-                        <span class="ml-1 duration-300 opacity-100 pointer-events-none ease-soft">Inventaris</span>
-                    </a>
-                </li>
-
-                <li class="mt-0.5 w-full">
                     <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors {{ request()->routeIs('kalab.bhp.*') ? 'active-nav-item' : 'text-slate-600 hover:text-slate-900' }}"
-                       href="{{ route('kalab.bhp.index') }}">
-                        <div class="nav-icon mr-2 flex h-8 w-8 items-center justify-center rounded-lg {{ request()->routeIs('kalab.bhp.*') ? 'active-icon' : '' }}">
-                            <i class="fas fa-flask {{ request()->routeIs('kalab.bhp.*') ? 'text-white' : 'text-slate-700' }} text-sm"></i>
-                        </div>
-                        <span class="ml-1 duration-300 opacity-100 pointer-events-none ease-soft">BHP</span>
-                    </a>
-                </li>
-                @endif
             </ul>
         </div>
 
