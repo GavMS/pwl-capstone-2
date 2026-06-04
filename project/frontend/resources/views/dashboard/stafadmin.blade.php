@@ -1,78 +1,94 @@
 @extends('dashboard.layout')
 @section('title', 'Dashboard Staf Administrasi')
 @section('page_title', 'Dashboard')
+
 @section('content')
-<div class="flex flex-wrap -mx-3">
-    <!-- card 1: Dokumen Pengadaan -->
-    <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
-        <div class="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border hover:-translate-y-1 transition-transform duration-200">
-            <div class="flex-auto p-4">
-                <div class="flex flex-row items-center justify-between -mx-3">
-                    <div class="px-3">
-                        <h5 class="mb-0 font-bold text-slate-700 text-lg">Dokumen Pengadaan</h5>
-                    </div>
-                    <div class="px-3 flex items-center justify-end">
-                        <div class="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl from-purple-700 to-pink-500 shadow-soft-2xl flex items-center justify-center">
-                            <i class="fas fa-file-invoice text-white text-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+@php
+    $firstName = explode(' ', $user['name'] ?? 'User')[0];
+    $p = $procStats ?? [];
+@endphp
+
+<style>
+.greeting-title { font-size: 1.5rem; font-weight: 700; color: #344767; margin: 0 0 .25rem; }
+.greeting-sub   { font-size: .875rem; color: #7b809a; margin: 0; }
+.stat-row { display: flex; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+.stat-card {
+    background: #fff; border-radius: 1rem; padding: 1.25rem 1.5rem;
+    border: 1px solid #eef0f5;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04), 0 8px 20px -12px rgba(0,0,0,.08);
+    display: flex; align-items: center; gap: 1rem;
+    transition: transform .18s ease, box-shadow .18s ease;
+    flex: 1; min-width: 200px;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,.04), 0 14px 30px -12px rgba(0,0,0,.12); }
+.stat-icon { width: 3rem; height: 3rem; border-radius: .75rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.1rem; }
+.si-blue   { background: #eff6ff; color: #1d4ed8; }
+.si-green  { background: #f0fdf4; color: #15803d; }
+.si-gray   { background: #f8f9fa; color: #64748b; }
+.stat-label  { font-size: .8125rem; color: #7b809a; margin: 0 0 .375rem; font-weight: 500; }
+.stat-number { font-size: 1.75rem; font-weight: 700; color: #344767; line-height: 1; margin: 0 0 .35rem; }
+.stat-sub    { font-size: .7rem; color: #adb5bd; margin: 0; }
+.section-card {
+    background: #fff; border-radius: 1rem; border: 1px solid #eef0f5;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04), 0 8px 20px -12px rgba(0,0,0,.08); overflow: hidden; margin-top: 1.5rem;
+}
+.section-card-header { display: flex; align-items: center; padding: 1.125rem 1.5rem; border-bottom: 1px solid #f0f2f5; }
+.section-card-title { font-size: 1rem; font-weight: 700; color: #344767; margin: 0; display: flex; align-items: center; gap: .5rem; }
+.section-card-title i { color: #7928ca; font-size: .8rem; }
+.quicklinks { display: flex; flex-wrap: wrap; gap: 1rem; padding: 1.5rem; }
+.quicklink-btn {
+    display: inline-flex; align-items: center; gap: .75rem; padding: .875rem 1.25rem;
+    border-radius: .75rem; text-decoration: none; background: #f8f9fa; border: 1px solid #eef0f5;
+    transition: background .15s, border-color .15s, transform .15s; flex: 1; min-width: 180px;
+}
+.quicklink-btn:hover { background: #f0f2f5; border-color: #d2d6da; transform: translateY(-1px); }
+.qi { width: 2.25rem; height: 2.25rem; border-radius: .5rem; display: flex; align-items: center; justify-content: center; font-size: .875rem; flex-shrink: 0; color: #fff; }
+</style>
+
+<div style="margin-bottom:1.5rem;">
+    <h4 class="greeting-title">Halo, {{ $firstName }} 👋</h4>
+    <p class="greeting-sub">Kelola penerimaan dan labeling barang dari pengadaan yang disetujui</p>
+</div>
+
+<div class="stat-row">
+    <div class="stat-card">
+        <div class="stat-icon si-blue"><i class="fas fa-clipboard-check"></i></div>
+        <div>
+            <p class="stat-label">Pengadaan Disetujui</p>
+            <h3 class="stat-number">{{ $p['approved'] ?? 0 }}</h3>
+            <p class="stat-sub">Siap diproses & dilabeling</p>
         </div>
     </div>
-
-    <!-- card 2: Penerimaan Barang -->
-    <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
-        <div class="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border hover:-translate-y-1 transition-transform duration-200">
-            <div class="flex-auto p-4">
-                <div class="flex flex-row items-center justify-between -mx-3">
-                    <div class="px-3">
-                        <h5 class="mb-0 font-bold text-slate-700 text-lg">Penerimaan Barang</h5>
-                    </div>
-                    <div class="px-3 flex items-center justify-end">
-                        <div class="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl from-purple-700 to-pink-500 shadow-soft-2xl flex items-center justify-center">
-                            <i class="fas fa-box-open text-white text-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- card 3: Arsip Dokumen -->
-    <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
-        <div class="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border hover:-translate-y-1 transition-transform duration-200">
-            <div class="flex-auto p-4">
-                <div class="flex flex-row items-center justify-between -mx-3">
-                    <div class="px-3">
-                        <h5 class="mb-0 font-bold text-slate-700 text-lg">Arsip Dokumen</h5>
-                    </div>
-                    <div class="px-3 flex items-center justify-end">
-                        <div class="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl from-purple-700 to-pink-500 shadow-soft-2xl flex items-center justify-center">
-                            <i class="fas fa-archive text-white text-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- card 4: Notifikasi -->
-    <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
-        <div class="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border hover:-translate-y-1 transition-transform duration-200">
-            <div class="flex-auto p-4">
-                <div class="flex flex-row items-center justify-between -mx-3">
-                    <div class="px-3">
-                        <h5 class="mb-0 font-bold text-slate-700 text-lg">Notifikasi Tugas</h5>
-                    </div>
-                    <div class="px-3 flex items-center justify-end">
-                        <div class="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl from-purple-700 to-pink-500 shadow-soft-2xl flex items-center justify-center">
-                            <i class="fas fa-bell text-white text-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="stat-card">
+        <div class="stat-icon si-green"><i class="fas fa-folder-open"></i></div>
+        <div>
+            <p class="stat-label">Total Pengajuan</p>
+            <h3 class="stat-number">{{ $p['total'] ?? 0 }}</h3>
+            <p class="stat-sub">{{ $p['submitted'] ?? 0 }} menunggu review Kaprodi</p>
         </div>
     </div>
 </div>
+
+<div class="section-card">
+    <div class="section-card-header">
+        <h6 class="section-card-title"><i class="fas fa-bolt"></i> Akses Cepat</h6>
+    </div>
+    <div class="quicklinks">
+        <a href="{{ route('stafadmin.procurement.index') }}" class="quicklink-btn">
+            <div class="qi" style="background:linear-gradient(310deg,#2152ff,#21d4fd);"><i class="fas fa-clipboard-check"></i></div>
+            <div>
+                <div style="font-size:.875rem;font-weight:600;color:#344767;">Draf Disetujui</div>
+                <div style="font-size:.75rem;color:#adb5bd;">{{ $p['approved'] ?? 0 }} siap diproses</div>
+            </div>
+        </a>
+        <a href="{{ route('stafadmin.inventaris.index') }}" class="quicklink-btn">
+            <div class="qi" style="background:linear-gradient(310deg,#17ad37,#98ec2c);"><i class="fas fa-qrcode"></i></div>
+            <div>
+                <div style="font-size:.875rem;font-weight:600;color:#344767;">Labeling Inventaris</div>
+                <div style="font-size:.75rem;color:#adb5bd;">Cetak & tempel label QR</div>
+            </div>
+        </a>
+    </div>
+</div>
+
 @endsection

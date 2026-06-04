@@ -43,8 +43,6 @@
 }
 .stat-icon-users    { background: #eef2ff; color: #4338ca; }
 .stat-icon-rooms    { background: #f0fdf4; color: #15803d; }
-.stat-icon-assets   { background: #fff7ed; color: #c2410c; }
-.stat-icon-bhp      { background: #fdf2ff; color: #7928ca; }
 
 .stat-text { min-width: 0; flex: 1; }
 .stat-label {
@@ -153,30 +151,6 @@
                 <p class="stat-label">Ruangan / Lab</p>
                 <h3 class="stat-number">{{ $stats['room_count'] ?? 0 }}</h3>
                 <p class="stat-sub">Tersebar di {{ $stats['building_count'] ?? 0 }} gedung</p>
-            </div>
-        </div>
-    </div>
-    <div class="w-full max-w-full px-3 mb-4 sm:w-1/2 xl:w-1/4 xl:mb-0">
-        <div class="stat-card">
-            <div class="stat-icon stat-icon-assets">
-                <i class="fas fa-boxes"></i>
-            </div>
-            <div class="stat-text">
-                <p class="stat-label">Aset Inventaris</p>
-                <h3 class="stat-number">{{ $stats['asset_count'] ?? 0 }}</h3>
-                <p class="stat-sub">Tercatat sistem</p>
-            </div>
-        </div>
-    </div>
-    <div class="w-full max-w-full px-3 mb-4 sm:w-1/2 xl:w-1/4 xl:mb-0">
-        <div class="stat-card">
-            <div class="stat-icon stat-icon-bhp">
-                <i class="fas fa-flask"></i>
-            </div>
-            <div class="stat-text">
-                <p class="stat-label">Item BHP</p>
-                <h3 class="stat-number">{{ $stats['bhp_count'] ?? 0 }}</h3>
-                <p class="stat-sub">{{ $stats['low_stock_count'] ?? 0 }} di bawah stok minimum</p>
             </div>
         </div>
     </div>

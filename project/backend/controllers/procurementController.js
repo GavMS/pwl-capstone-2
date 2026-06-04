@@ -212,6 +212,130 @@ exports.deleteDraft = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────
+// PATCH /api/procurement/:id/items/:itemId/review — Review per item
+// ─────────────────────────────────────────────────────────
+exports.updateItemStatus = async (req, res) => {
+    const { id, itemId } = req.params;
+    const { review_status } = req.body;
+
+    if (!['approved', 'rejected', 'pending'].includes(review_status)) {
+        return res.status(400).json({ message: 'Status tidak valid. Harus "approved", "rejected", atau "pending".' });
+    }
+
+    try {
+        const [drafts] = await db.query('SELECT id, status FROM procurement_drafts WHERE id = ?', [id]);
+        if (drafts.length === 0) return res.status(404).json({ message: 'Draf tidak ditemukan' });
+        if (drafts[0].status !== 'submitted') {
+            return res.status(400).json({ message: 'Draf sudah difinalisasi atau belum diajukan. Item tidak dapat diubah.' });
+        }
+
+        const [result] = await db.query(
+            'UPDATE procurement_items SET review_status = ? WHERE id = ? AND draft_id = ?',
+            [review_status, itemId, id]
+        );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ message: 'Item tidak ditemukan dalam draf ini' });
+        }
+
+        res.json({ message: `Status item berhasil diubah menjadi "${review_status}"` });
+    } catch (error) {
+        console.error('updateItemStatus error:', error);
+        res.status(500).json({ message: 'Server error: ' + (error.sqlMessage || error.message) });
+    }
+};
+
+// ─────────────────────────────────────────────────────────
+// POST /api/procurement/:id/finalize — Finalisasi draf (kunci permanen)
+// ─────────────────────────────────────────────────────────
+exports.finalizeDraft = async (req, res) => {
+    const { id } = req.params;
+    const connection = await db.getConnection();
+    await connection.beginTransaction();
+
+    try {
+        const [drafts] = await connection.query('SELECT id, status FROM procurement_drafts WHERE id = ?', [id]);
+        if (drafts.length === 0) {
+            connection.release();
+            return res.status(404).json({ message: 'Draf tidak ditemukan' });
+        }
+        if (drafts[0].status !== 'submitted') {
+            connection.release();
+            return res.status(400).json({ message: 'Hanya draf berstatus "submitted" yang dapat difinalisasi.' });
+        }
+
+        // Otomatis setujui item yang masih "pending" (belum diputuskan Kaprodi)
+        await connection.query(
+            'UPDATE procurement_items SET review_status = "approved" WHERE draft_id = ? AND review_status = "pending"',
+            [id]
+        );
+
+        // Kunci draf sebagai finalized (status = approved)
+        await connection.query(
+            'UPDATE procurement_drafts SET status = "approved", updated_at = NOW() WHERE id = ?',
+            [id]
+        );
+
+        await connection.commit();
+        res.json({ message: 'Draf berhasil difinalisasi. Item yang belum diputuskan otomatis disetujui.' });
+    } catch (error) {
+        await connection.rollback();
+        console.error('finalizeDraft error:', error);
+        res.status(500).json({ message: 'Server error: ' + (error.sqlMessage || error.message) });
+    } finally {
+        connection.release();
+    }
+};
+
+// ─────────────────────────────────────────────────────────
+// GET /api/procurement/stats — Hitung draf per status
+// ─────────────────────────────────────────────────────────
+exports.getStats = async (req, res) => {
+    try {
+        const [rows] = await db.query(
+            'SELECT status, COUNT(*) AS count FROM procurement_drafts GROUP BY status'
+        );
+        const stats = { draft: 0, submitted: 0, approved: 0, rejected: 0, total: 0 };
+        rows.forEach(r => {
+            if (stats.hasOwnProperty(r.status)) stats[r.status] = Number(r.count);
+            stats.total += Number(r.count);
+        });
+        res.json({ stats });
+    } catch (error) {
+        console.error('getStats error:', error);
+        res.status(500).json({ message: 'Server error: ' + (error.sqlMessage || error.message) });
+    }
+};
+
+// ─────────────────────────────────────────────────────────
+// PATCH /api/procurement/:id/status — Update status draf (approve/reject)
+// ─────────────────────────────────────────────────────────
+exports.updateStatus = async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ['approved', 'rejected'];
+    if (!status || !validStatuses.includes(status)) {
+        return res.status(400).json({ message: 'Status tidak valid. Harus "approved" atau "rejected".' });
+    }
+
+    try {
+        const [existing] = await db.query('SELECT id, status FROM procurement_drafts WHERE id = ?', [id]);
+        if (existing.length === 0) {
+            return res.status(404).json({ message: 'Draf pengadaan tidak ditemukan' });
+        }
+        if (existing[0].status !== 'submitted') {
+            return res.status(400).json({ message: 'Hanya draf yang telah diajukan (submitted) yang dapat disetujui atau ditolak.' });
+        }
+
+        await db.query('UPDATE procurement_drafts SET status = ?, updated_at = NOW() WHERE id = ?', [status, id]);
+        res.json({ message: `Status draf berhasil diperbarui menjadi "${status}"` });
+    } catch (error) {
+        console.error('updateStatus error:', error);
+        res.status(500).json({ message: 'Server error: ' + (error.sqlMessage || error.message) });
+    }
+};
+
+// ─────────────────────────────────────────────────────────
 // GET /api/procurement/assets/list — Dropdown Aset Inventaris
 // ─────────────────────────────────────────────────────────
 exports.getAssetsList = async (req, res) => {

@@ -183,6 +183,8 @@
 .status-submitted .sb-dot { background:#4caf50; }
 .status-approved { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
 .status-approved .sb-dot { background:#2563eb; }
+.status-rejected { background:#fef2f2; color:#dc2626; border-color:#fecaca; }
+.status-rejected .sb-dot { background:#ef4444; }
 
 /* ─── Icon Action Buttons ─────────────────────────── */
 .action-group { display: flex; align-items: center; gap: .5rem; justify-content: center; }
@@ -423,7 +425,8 @@
                         <option value="">Semua Status</option>
                         <option value="draft">Draft</option>
                         <option value="submitted">Diajukan</option>
-                        <option value="approved">Diterima</option>
+                        <option value="approved">Disetujui</option>
+                        <option value="rejected">Ditolak</option>
                     </select>
                     <span class="result-count" id="resultCount">{{ count($drafts) }} draf</span>
                 </div>
@@ -440,7 +443,6 @@
                             <th style="text-align:center;">Item</th>
                             <th style="text-align:right;">Total Anggaran</th>
                             <th style="text-align:center;">Status</th>
-                            <th style="text-align:center;">Pembuat</th>
                             <th style="text-align:center; width:120px;">Aksi</th>
                         </tr>
                     </thead>
@@ -473,14 +475,15 @@
                                 <span class="status-badge status-submitted">
                                     <span class="sb-dot"></span> Diajukan
                                 </span>
-                                @else
+                                @elseif(($d['status'] ?? '') === 'approved')
                                 <span class="status-badge status-approved">
-                                    <span class="sb-dot"></span> Diterima
+                                    <span class="sb-dot"></span> Disetujui
+                                </span>
+                                @else
+                                <span class="status-badge status-rejected">
+                                    <span class="sb-dot"></span> Ditolak
                                 </span>
                                 @endif
-                            </td>
-                            <td style="text-align:center;">
-                                <span class="cell-text">{{ $d['creator_name'] ?? 'Kepala Lab' }}</span>
                             </td>
                             <td>
                                 <div class="action-group">

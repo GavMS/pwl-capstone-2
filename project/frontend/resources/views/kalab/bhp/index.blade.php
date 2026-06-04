@@ -147,8 +147,8 @@
 
         {{-- Page Header --}}
         <div class="page-header-card">
-            <h4 class="page-title">Bahan Habis Pakai</h4>
-            <p class="page-subtitle">Daftar bahan habis pakai (read-only)</p>
+            <h4 class="page-title"><i class="fas fa-flask mr-2" style="color:#be185d;"></i>BHP / Bahan Habis Pakai</h4>
+            <p class="page-subtitle">Daftar seluruh bahan habis pakai laboratorium beserta informasi stok. Data bersifat read-only.</p>
         </div>
 
         {{-- Error Banner --}}

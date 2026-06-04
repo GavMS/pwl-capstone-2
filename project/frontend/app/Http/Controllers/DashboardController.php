@@ -22,6 +22,28 @@ class DashboardController extends Controller
         return ['Authorization' => 'Bearer ' . Session::get('token', '')];
     }
 
+    private function fetchProcurementStats(): array
+    {
+        try {
+            $r = Http::withHeaders($this->authHeaders())
+                ->get("{$this->apiUrl()}/api/procurement/stats");
+            return $r->successful() ? ($r->json()['stats'] ?? []) : [];
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    private function fetchGeneralStats(): array
+    {
+        try {
+            $r = Http::withHeaders($this->authHeaders())
+                ->get("{$this->apiUrl()}/api/users/dashboard-stats");
+            return $r->successful() ? ($r->json()['stats'] ?? []) : [];
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
     public function admin()
     {
         $stats       = [];
@@ -49,21 +71,32 @@ class DashboardController extends Controller
 
     public function kalab()
     {
-        return view('dashboard.kalab', ['user' => $this->getUser()]);
+        return view('dashboard.kalab', [
+            'user'      => $this->getUser(),
+            'procStats' => $this->fetchProcurementStats(),
+        ]);
     }
 
     public function kaprodi()
     {
-        return view('dashboard.kaprodi', ['user' => $this->getUser()]);
+        return view('dashboard.kaprodi', [
+            'user'      => $this->getUser(),
+            'procStats' => $this->fetchProcurementStats(),
+        ]);
     }
 
     public function stafadmin()
     {
-        return view('dashboard.stafadmin', ['user' => $this->getUser()]);
+        return view('dashboard.stafadmin', [
+            'user'      => $this->getUser(),
+            'procStats' => $this->fetchProcurementStats(),
+        ]);
     }
 
     public function staflab()
     {
-        return view('dashboard.staflab', ['user' => $this->getUser()]);
+        return view('dashboard.staflab', [
+            'user' => $this->getUser(),
+        ]);
     }
 }
