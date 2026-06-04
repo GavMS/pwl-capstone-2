@@ -204,7 +204,6 @@
                 </li>
                 @endif
                 
-                    <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors {{ request()->routeIs('kalab.bhp.*') ? 'active-nav-item' : 'text-slate-600 hover:text-slate-900' }}"
             </ul>
         </div>
 
