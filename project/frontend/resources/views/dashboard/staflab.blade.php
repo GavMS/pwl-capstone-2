@@ -1,78 +1,32 @@
 @extends('dashboard.layout')
 @section('title', 'Dashboard Staf Laboratorium')
 @section('page_title', 'Dashboard')
+
 @section('content')
-<div class="flex flex-wrap -mx-3">
-    <!-- card 1: Pengecekan Aset -->
-    <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
-        <div class="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border hover:-translate-y-1 transition-transform duration-200">
-            <div class="flex-auto p-4">
-                <div class="flex flex-row items-center justify-between -mx-3">
-                    <div class="px-3">
-                        <h5 class="mb-0 font-bold text-slate-700 text-lg">Pengecekan Aset</h5>
-                    </div>
-                    <div class="px-3 flex items-center justify-end">
-                        <div class="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl from-purple-700 to-pink-500 shadow-soft-2xl flex items-center justify-center">
-                            <i class="fas fa-tools text-white text-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+@php $firstName = explode(' ', $user['name'] ?? 'User')[0]; @endphp
 
-    <!-- card 2: Laporan Kerusakan -->
-    <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
-        <div class="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border hover:-translate-y-1 transition-transform duration-200">
-            <div class="flex-auto p-4">
-                <div class="flex flex-row items-center justify-between -mx-3">
-                    <div class="px-3">
-                        <h5 class="mb-0 font-bold text-slate-700 text-lg">Laporan Kerusakan</h5>
-                    </div>
-                    <div class="px-3 flex items-center justify-end">
-                        <div class="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl from-purple-700 to-pink-500 shadow-soft-2xl flex items-center justify-center">
-                            <i class="fas fa-clipboard-list text-white text-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<style>
+.greeting-title { font-size: 1.5rem; font-weight: 700; color: #344767; margin: 0 0 .25rem; }
+.greeting-sub   { font-size: .875rem; color: #7b809a; margin: 0; }
+.info-card {
+    background: #fff; border-radius: 1rem; border: 1px solid #eef0f5;
+    box-shadow: 0 1px 3px rgba(0,0,0,.04), 0 8px 20px -12px rgba(0,0,0,.08);
+    padding: 3rem 2rem; text-align: center; margin-top: 1.5rem;
+}
+</style>
 
-    <!-- card 3: Inventaris Lab Saya -->
-    <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
-        <div class="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border hover:-translate-y-1 transition-transform duration-200">
-            <div class="flex-auto p-4">
-                <div class="flex flex-row items-center justify-between -mx-3">
-                    <div class="px-3">
-                        <h5 class="mb-0 font-bold text-slate-700 text-lg">Inventaris Lab</h5>
-                    </div>
-                    <div class="px-3 flex items-center justify-end">
-                        <div class="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl from-purple-700 to-pink-500 shadow-soft-2xl flex items-center justify-center">
-                            <i class="fas fa-folder-open text-white text-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- card 4: Riwayat Aktivitas -->
-    <div class="w-full max-w-full px-3 mb-6 sm:w-1/2 sm:flex-none xl:mb-0 xl:w-1/4">
-        <div class="relative flex flex-col min-w-0 break-words bg-white shadow-soft-xl rounded-2xl bg-clip-border hover:-translate-y-1 transition-transform duration-200">
-            <div class="flex-auto p-4">
-                <div class="flex flex-row items-center justify-between -mx-3">
-                    <div class="px-3">
-                        <h5 class="mb-0 font-bold text-slate-700 text-lg">Riwayat Aktivitas</h5>
-                    </div>
-                    <div class="px-3 flex items-center justify-end">
-                        <div class="inline-block w-12 h-12 text-center rounded-lg bg-gradient-to-tl from-purple-700 to-pink-500 shadow-soft-2xl flex items-center justify-center">
-                            <i class="fas fa-history text-white text-lg"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div style="margin-bottom:1.5rem;">
+    <h4 class="greeting-title">Halo, {{ $firstName }} 👋</h4>
+    <p class="greeting-sub">Selamat datang di sistem AsetLab</p>
 </div>
+
+<div class="info-card">
+    <i class="fas fa-tools" style="font-size:3rem; color:#d2d6da; display:block; margin-bottom:1rem;"></i>
+    <h5 style="font-size:1.1rem; font-weight:700; color:#344767; margin-bottom:.5rem;">Staf Laboratorium</h5>
+    <p style="font-size:.875rem; color:#7b809a; max-width:420px; margin:0 auto;">
+        Gunakan sidebar untuk mengakses fitur yang tersedia sesuai kewenangan Anda.
+        Hubungi administrator jika membutuhkan akses tambahan.
+    </p>
+</div>
+
 @endsection

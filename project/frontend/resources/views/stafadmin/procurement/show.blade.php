@@ -337,8 +337,8 @@
                 <div class="info-box">
                     <div class="info-box-icon"><i class="fas fa-boxes"></i></div>
                     <div>
-                        <p class="info-box-title">Jumlah Item</p>
-                        <p class="info-box-value">{{ count($items) }} barang</p>
+                        <p class="info-box-title">Item Disetujui</p>
+                        <p class="info-box-value">{{ collect($items)->filter(fn($i) => ($i['review_status'] ?? 'pending') !== 'rejected')->count() }} barang</p>
                     </div>
                 </div>
                 <div class="info-box">
@@ -348,13 +348,6 @@
                         <p class="info-box-value" style="color:#2152ff;">
                             Rp {{ number_format(collect($items)->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1)), 0, ',', '.') }}
                         </p>
-                    </div>
-                </div>
-                <div class="info-box">
-                    <div class="info-box-icon"><i class="fas fa-user"></i></div>
-                    <div>
-                        <p class="info-box-title">Dibuat Oleh</p>
-                        <p class="info-box-value">{{ $draft['creator_name'] ?? 'Kepala Lab' }}</p>
                     </div>
                 </div>
                 <div class="info-box">
@@ -393,10 +386,13 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @php $displayIndex = 0; @endphp
                         @forelse($items as $index => $item)
+                        @if(($item['review_status'] ?? 'pending') !== 'rejected')
+                        @php $displayIndex++; @endphp
                         <tr>
                             {{-- No --}}
-                            <td class="col-no">{{ $index + 1 }}</td>
+                            <td class="col-no">{{ $displayIndex }}</td>
 
                             {{-- Tipe --}}
                             <td>
@@ -519,12 +515,13 @@
                                 @endif
                             </td>
                         </tr>
+                        @endif
                         @empty
                         <tr>
                             <td colspan="10">
                                 <div class="empty-items">
                                     <i class="fas fa-box-open" style="font-size:2.5rem; color:#d2d6da; display:block; margin-bottom:.75rem;"></i>
-                                    <p>Belum ada rincian barang untuk draf pengadaan ini.</p>
+                                    <p>Belum ada rincian barang yang disetujui untuk draf ini.</p>
                                 </div>
                             </td>
                         </tr>

@@ -19,20 +19,17 @@ async function checkUserDependencies(userId) {
 
     for (const dep of tablesToCheck) {
         try {
-            // Cek apakah tabel exists dulu (aman meski belum ada tabelnya)
             const [tables] = await db.query(
-                `SELECT COUNT(*) as cnt FROM information_schema.TABLES 
+                `SELECT COUNT(*) as cnt FROM information_schema.TABLES
                  WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?`,
                 [dep.table]
             );
-
-            if (tables[0].cnt === 0) continue; // tabel belum ada, skip
+            if (tables[0].cnt === 0) continue;
 
             const [rows] = await db.query(
                 `SELECT COUNT(*) as cnt FROM \`${dep.table}\` WHERE \`${dep.column}\` = ?`,
                 [userId]
             );
-
             if (rows[0].cnt > 0) {
                 dependencies.push({ label: dep.label, count: rows[0].cnt });
             }
@@ -40,6 +37,38 @@ async function checkUserDependencies(userId) {
             // Ignore jika kolom tidak ada
         }
     }
+
+    // Cek draf pengadaan yang dibuat user ini
+    try {
+        const [procRows] = await db.query(
+            'SELECT COUNT(*) as cnt FROM procurement_drafts WHERE created_by = ?', [userId]
+        );
+        if (procRows[0].cnt > 0) {
+            dependencies.push({ label: 'Draf Pengadaan', count: procRows[0].cnt });
+        }
+    } catch (err) { /* ignore */ }
+
+    // Cek apakah user ini satu-satunya aktif untuk role unik (Kepala Lab / Kaprodi)
+    const uniqueRoleNames = ['Kepala Laboratorium', 'Ketua Program Studi'];
+    try {
+        const [userRoleRows] = await db.query(
+            `SELECT r.name as role_name, u.role_id
+             FROM users u JOIN roles r ON u.role_id = r.id
+             WHERE u.id = ?`, [userId]
+        );
+        if (userRoleRows.length > 0 && uniqueRoleNames.includes(userRoleRows[0].role_name)) {
+            const [otherActive] = await db.query(
+                'SELECT COUNT(*) as cnt FROM users WHERE role_id = ? AND is_active = 1 AND id != ?',
+                [userRoleRows[0].role_id, userId]
+            );
+            if (otherActive[0].cnt === 0) {
+                dependencies.push({
+                    label: `Satu-satunya ${userRoleRows[0].role_name} aktif — nonaktifkan dulu sebelum menghapus`,
+                    count: 1
+                });
+            }
+        }
+    } catch (err) { /* ignore */ }
 
     return dependencies;
 }
@@ -155,6 +184,18 @@ exports.create = async (req, res) => {
             return res.status(409).json({ message: 'Email sudah terdaftar' });
         }
 
+        // Kepala Laboratorium & Ketua Program Studi hanya boleh 1 aktif
+        const [roleRow] = await db.query('SELECT name FROM roles WHERE id = ?', [role_id]);
+        const uniqueRoles = ['Kepala Laboratorium', 'Ketua Program Studi'];
+        if (roleRow.length > 0 && uniqueRoles.includes(roleRow[0].name)) {
+            const [existingUnique] = await db.query(
+                'SELECT id FROM users WHERE role_id = ? AND is_active = 1', [role_id]
+            );
+            if (existingUnique.length > 0) {
+                return res.status(409).json({ message: `Sudah ada ${roleRow[0].name} yang aktif. Hanya boleh satu.` });
+            }
+        }
+
         const hashedPwd = await bcrypt.hash(password, 10);
         const activeVal = (is_active === false || is_active === '0' || is_active === 0) ? 0 : 1;
         const [result] = await db.query(
@@ -191,6 +232,18 @@ exports.update = async (req, res) => {
         const [emailCheck] = await db.query('SELECT id FROM users WHERE email = ? AND id != ?', [email, id]);
         if (emailCheck.length > 0) {
             return res.status(409).json({ message: 'Email sudah digunakan oleh user lain' });
+        }
+
+        // Kepala Laboratorium & Ketua Program Studi hanya boleh 1 aktif
+        const [roleRow] = await db.query('SELECT name FROM roles WHERE id = ?', [role_id]);
+        const uniqueRoles = ['Kepala Laboratorium', 'Ketua Program Studi'];
+        if (roleRow.length > 0 && uniqueRoles.includes(roleRow[0].name)) {
+            const [existingUnique] = await db.query(
+                'SELECT id FROM users WHERE role_id = ? AND id != ? AND is_active = 1', [role_id, id]
+            );
+            if (existingUnique.length > 0) {
+                return res.status(409).json({ message: `Sudah ada ${roleRow[0].name} yang aktif. Hanya boleh satu.` });
+            }
         }
 
         const activeVal = (is_active === false || is_active === '0' || is_active === 0) ? 0 : 1;

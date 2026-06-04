@@ -164,11 +164,21 @@
 
                 @if(isset($user['role']) && $user['role'] === 'Ketua Program Studi')
                 <li class="mt-0.5 w-full">
-                    <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors text-slate-600 hover:text-slate-900" href="#">
-                        <div class="shadow-soft-md mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5">
-                            <i class="fas fa-tasks text-slate-700 text-xs"></i>
+                    <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors {{ request()->routeIs('kaprodi.procurement.*') ? 'active-nav-item' : 'text-slate-600 hover:text-slate-900' }}"
+                       href="{{ route('kaprodi.procurement.index') }}">
+                        <div class="shadow-soft-md mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5 {{ request()->routeIs('kaprodi.procurement.*') ? 'active-icon' : '' }}">
+                            <i class="fas fa-tasks {{ request()->routeIs('kaprodi.procurement.*') ? 'text-white' : 'text-slate-700' }} text-xs"></i>
                         </div>
                         <span class="ml-1 duration-300 opacity-100 pointer-events-none ease-soft">Review Pengadaan</span>
+                    </a>
+                </li>
+                <li class="mt-0.5 w-full">
+                    <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors {{ request()->routeIs('kaprodi.riwayat.*') ? 'active-nav-item' : 'text-slate-600 hover:text-slate-900' }}"
+                       href="{{ route('kaprodi.riwayat.index') }}">
+                        <div class="shadow-soft-md mr-2 flex h-8 w-8 items-center justify-center rounded-lg bg-white bg-center stroke-0 text-center xl:p-2.5 {{ request()->routeIs('kaprodi.riwayat.*') ? 'active-icon' : '' }}">
+                            <i class="fas fa-history {{ request()->routeIs('kaprodi.riwayat.*') ? 'text-white' : 'text-slate-700' }} text-xs"></i>
+                        </div>
+                        <span class="ml-1 duration-300 opacity-100 pointer-events-none ease-soft">Riwayat Disetujui</span>
                     </a>
                 </li>
                 @endif
@@ -194,6 +204,7 @@
                 </li>
                 @endif
                 
+                @if(isset($user['role']) && $user['role'] === 'Kepala Laboratorium')
                 <li class="mt-0.5 w-full">
                     <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors {{ request()->routeIs('kalab.inventaris.*') ? 'active-nav-item' : 'text-slate-600 hover:text-slate-900' }}"
                        href="{{ route('kalab.inventaris.index') }}">
@@ -213,6 +224,7 @@
                         <span class="ml-1 duration-300 opacity-100 pointer-events-none ease-soft">BHP</span>
                     </a>
                 </li>
+                @endif
             </ul>
         </div>
 
