@@ -243,6 +243,16 @@ const testConnection = async () => {
             console.log('Added notes column to procurement_items table.');
         }
 
+        // Ensure procurement_items.review_status column exists (safe migration)
+        const [reviewCols] = await connection.query(`
+            SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'procurement_items' AND COLUMN_NAME = 'review_status'
+        `);
+        if (reviewCols.length === 0) {
+            await connection.query(`ALTER TABLE procurement_items ADD COLUMN review_status VARCHAR(50) NOT NULL DEFAULT 'pending'`);
+            console.log('Added review_status column to procurement_items table.');
+        }
+
         // Ensure users.room_id column exists (safe migration)
         const [uCols] = await connection.query(`
             SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS

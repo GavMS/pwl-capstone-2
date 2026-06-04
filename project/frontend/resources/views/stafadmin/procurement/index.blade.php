@@ -255,7 +255,6 @@
                             <th style="text-align:center;">Jumlah Item</th>
                             <th style="text-align:right;">Total Anggaran</th>
                             <th style="text-align:center;">Status</th>
-                            <th style="text-align:center;">Pembuat</th>
                             <th style="text-align:center; width:80px;">Aksi</th>
                         </tr>
                     </thead>
@@ -284,9 +283,6 @@
                                     <span class="sb-dot"></span> Disetujui
                                 </span>
                             </td>
-                            <td style="text-align:center;">
-                                <span class="cell-text">{{ $d['creator_name'] ?? 'Kepala Lab' }}</span>
-                            </td>
                             <td>
                                 <div class="action-group">
                                     <a href="{{ route('stafadmin.procurement.show', $d['id']) }}"
@@ -299,7 +295,7 @@
                         </tr>
                         @empty
                         <tr id="emptyRow">
-                            <td colspan="8">
+                            <td colspan="7">
                                 <div class="empty-state">
                                     <i class="fas fa-clipboard-list" style="font-size:2.5rem; color:#d2d6da; display:block; margin-bottom:1rem;"></i>
                                     <p style="font-weight:600; color:#7b809a; margin-bottom:.25rem;">Belum ada draf yang disetujui.</p>

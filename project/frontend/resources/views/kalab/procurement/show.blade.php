@@ -76,8 +76,10 @@
 .status-draft .sb-dot { background:#ea580c; }
 .status-submitted { background:#e8f5e9; color:#2e7d32; border-color:#c8e6c9; }
 .status-submitted .sb-dot { background:#4caf50; }
-.status-approved     { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+.status-approved  { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
 .status-approved .sb-dot { background:#2563eb; }
+.status-rejected  { background:#fef2f2; color:#dc2626; border-color:#fecaca; }
+.status-rejected .sb-dot { background:#ef4444; }
 
 /* ─── Type Badges ─────────────────────────────────── */
 .type-badge {
@@ -285,11 +287,15 @@
                     </span>
                     @elseif(($draft['status'] ?? 'draft') === 'submitted')
                     <span class="status-badge status-submitted">
-                        <span class="sb-dot"></span> Sudah Diajukan (Terkunci)
+                        <span class="sb-dot"></span> Sudah Diajukan (Menunggu Review)
+                    </span>
+                    @elseif(($draft['status'] ?? 'draft') === 'approved')
+                    <span class="status-badge status-approved">
+                        <span class="sb-dot"></span> Disetujui Kaprodi
                     </span>
                     @else
-                    <span class="status-badge status-approved">
-                        <span class="sb-dot"></span> Telah Diterima
+                    <span class="status-badge status-rejected">
+                        <span class="sb-dot"></span> Ditolak Kaprodi
                     </span>
                     @endif
                 </div>
@@ -310,13 +316,6 @@
                         <p class="info-box-value" style="color:#7928ca;">
                             Rp {{ number_format(collect($items)->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1)), 0, ',', '.') }}
                         </p>
-                    </div>
-                </div>
-                <div class="info-box">
-                    <div class="info-box-icon"><i class="fas fa-user"></i></div>
-                    <div>
-                        <p class="info-box-title">Dibuat Oleh</p>
-                        <p class="info-box-value">{{ $draft['creator_name'] ?? 'Kepala Lab' }}</p>
                     </div>
                 </div>
                 <div class="info-box">

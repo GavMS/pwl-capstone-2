@@ -8,6 +8,7 @@ use App\Http\Controllers\RoomManagementController;
 use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\StafAdminController;
+use App\Http\Controllers\KaprodController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -64,6 +65,17 @@ Route::prefix('kalab')->middleware('role:Kepala Laboratorium')->group(function (
     // Inventaris & BHP
     Route::get('/inventaris',               [InventoryController::class, 'assets'])->name('kalab.inventaris.index');
     Route::get('/bhp',                      [InventoryController::class, 'consumables'])->name('kalab.bhp.index');
+});
+
+// ─────────────────────────────────────────────
+// Ketua Program Studi: Review & Riwayat Pengadaan
+// ─────────────────────────────────────────────
+Route::prefix('kaprodi')->middleware('role:Ketua Program Studi')->group(function () {
+    Route::get('/procurement',                              [KaprodController::class, 'index'])->name('kaprodi.procurement.index');
+    Route::get('/procurement/{id}',                         [KaprodController::class, 'show'])->name('kaprodi.procurement.show');
+    Route::post('/procurement/{id}/items/{itemId}/review',  [KaprodController::class, 'updateItemStatus'])->name('kaprodi.procurement.item.review');
+    Route::post('/procurement/{id}/finalize',               [KaprodController::class, 'finalize'])->name('kaprodi.procurement.finalize');
+    Route::get('/riwayat',                                  [KaprodController::class, 'riwayat'])->name('kaprodi.riwayat.index');
 });
 
 // ─────────────────────────────────────────────

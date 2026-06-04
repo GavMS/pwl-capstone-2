@@ -162,8 +162,8 @@
 
         {{-- Page Header --}}
         <div class="page-header-card">
-            <h4 class="page-title">Inventaris</h4>
-            <p class="page-subtitle">Daftar barang inventaris (read-only)</p>
+            <h4 class="page-title"><i class="fas fa-box-open mr-2" style="color:#7928ca;"></i>Inventaris Aset</h4>
+            <p class="page-subtitle">Daftar seluruh barang inventaris laboratorium. Data bersifat read-only.</p>
         </div>
 
         {{-- Error Banner --}}
