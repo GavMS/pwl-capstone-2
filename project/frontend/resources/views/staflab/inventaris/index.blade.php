@@ -185,7 +185,7 @@
     margin-bottom:.75rem;
 }
 .bhp-item-row {
-    display:grid; grid-template-columns: 1fr 130px 36px;
+    display:grid; grid-template-columns: 1fr 180px 36px;
     gap:.5rem; align-items:center; margin-bottom:.5rem;
 }
 .btn-remove-bhp {
@@ -537,7 +537,7 @@ function addBhpRow() {
             ${options}
         </select>
         <div style="display:flex; align-items:stretch; flex:1; min-width:120px;">
-            <input type="number" class="form-control bhp-qty" min="1" value="1" placeholder="Jumlah" required style="border-right:0; border-top-right-radius:0; border-bottom-right-radius:0;">
+            <input type="number" class="form-control bhp-qty" min="1" value="1" placeholder="Jumlah" required style="border-right:0; border-top-right-radius:0; border-bottom-right-radius:0; min-width:60px; padding-left:0.5rem;">
             <span class="bhp-unit-label" style="background:#f5f6fb; padding:0 .75rem; border:1px solid #d2d6da; border-left:0; border-top-right-radius:.5rem; border-bottom-right-radius:.5rem; font-size:.8125rem; color:#7b809a; white-space:nowrap; display:flex; align-items:center;">-</span>
         </div>
         <button type="button" class="btn-remove-bhp" onclick="document.getElementById('${rowId}').remove()" style="flex:none;">
