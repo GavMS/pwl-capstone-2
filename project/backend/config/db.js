@@ -263,6 +263,40 @@ const testConnection = async () => {
             console.log('Added room_id column to users table.');
         }
 
+        // Auto-create maintenance_logs table
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS maintenance_logs (
+                id                     BIGINT AUTO_INCREMENT PRIMARY KEY,
+                asset_id               BIGINT NOT NULL,
+                performed_by           BIGINT NULL,
+                maintenance_date       DATE NOT NULL,
+                description            TEXT NOT NULL,
+                condition_before       VARCHAR(100) NULL,
+                condition_after        VARCHAR(100) NOT NULL DEFAULT 'Baik',
+                cost                   DECIMAL(15,2) NULL DEFAULT 0,
+                notes                  TEXT NULL,
+                created_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                FOREIGN KEY (asset_id)     REFERENCES assets(id) ON DELETE CASCADE,
+                FOREIGN KEY (performed_by) REFERENCES users(id) ON DELETE SET NULL
+            )
+        `);
+
+        // Auto-create maintenance_consumables table (BHP digunakan per log)
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS maintenance_consumables (
+                id             BIGINT AUTO_INCREMENT PRIMARY KEY,
+                log_id         BIGINT NOT NULL,
+                consumable_id  BIGINT NOT NULL,
+                quantity_used  INT NOT NULL DEFAULT 1,
+                created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (log_id)        REFERENCES maintenance_logs(id) ON DELETE CASCADE,
+                FOREIGN KEY (consumable_id) REFERENCES consumables(id) ON DELETE CASCADE
+            )
+        `);
+
+        console.log('maintenance_logs & maintenance_consumables tables ensured.');
+
         connection.release();
     } catch (error) {
         console.error('Error connecting to MySQL:', error);

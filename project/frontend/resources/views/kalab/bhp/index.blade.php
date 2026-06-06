@@ -161,7 +161,7 @@
         {{-- Minimum Stock Warning Banner --}}
         @php
             $criticalItems = collect($consumables)->filter(function($c) {
-                return ($c['stock'] ?? 0) < ($c['min_stock'] ?? 0);
+                return ($c['stock'] ?? 0) <= ($c['min_stock'] ?? 0);
             });
         @endphp
         
@@ -217,7 +217,7 @@
                             <td style="text-align:center;"><span class="cell-text">{{ $c['min_stock'] ?? 0 }}</span></td>
                             <td>
                                 @php
-                                    $isCritical = ($c['stock'] ?? 0) < ($c['min_stock'] ?? 0);
+                                    $isCritical = ($c['stock'] ?? 0) <= ($c['min_stock'] ?? 0);
                                 @endphp
                                 @if($isCritical)
                                 <span class="cond-badge cond-kritis">

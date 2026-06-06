@@ -7,7 +7,7 @@
     "start": "node server.js",
     "dev": "nodemon server.js",
     "seed": "node seeders/seed.js",
-    "reset": "node reset-db.js && node seeders/seed.js",
+    "fresh": "node reset-and-seed.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

@@ -9,6 +9,7 @@ use App\Http\Controllers\ProcurementController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\StafAdminController;
 use App\Http\Controllers\KaprodController;
+use App\Http\Controllers\StafLabController;
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -85,4 +86,13 @@ Route::prefix('stafadmin')->middleware('role:Staf Administrasi')->group(function
     Route::get('/procurement',        [StafAdminController::class, 'index'])->name('stafadmin.procurement.index');
     Route::get('/procurement/{id}',   [StafAdminController::class, 'show'])->name('stafadmin.procurement.show');
     Route::get('/inventaris',         [StafAdminController::class, 'inventaris'])->name('stafadmin.inventaris.index');
+});
+
+// ─────────────────────────────────────────────
+// Staf Laboratorium: Manajemen BHP & Log Maintenance
+// ─────────────────────────────────────────────
+Route::prefix('staflab')->middleware('role:Staf Laboratorium')->group(function () {
+    Route::get('/bhp',         [StafLabController::class, 'bhpIndex'])         ->name('staflab.bhp.index');
+    Route::get('/inventaris',  [StafLabController::class, 'inventarisIndex'])  ->name('staflab.inventaris.index');
+    Route::get('/maintenance', [StafLabController::class, 'maintenanceIndex']) ->name('staflab.maintenance.index');
 });
