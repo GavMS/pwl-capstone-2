@@ -147,7 +147,7 @@
 .btn-submit { padding:.6rem 1.5rem; background:linear-gradient(310deg,#7928ca,#ff007f); border:none; border-radius:.5rem; font-size:.875rem; font-weight:600; color:#fff; cursor:pointer; }
 .bhp-section { border:1px solid #f0f2f5; border-radius:.75rem; padding:1rem; margin-top:.5rem; }
 .bhp-section-title { font-size:.8rem; font-weight:700; color:#344767; text-transform:uppercase; margin-bottom:.75rem; }
-.bhp-item-row { display:grid; grid-template-columns: 1fr 130px 36px; gap:.5rem; align-items:center; margin-bottom:.5rem; }
+.bhp-item-row { display:grid; grid-template-columns: 1fr 180px 36px; gap:.5rem; align-items:center; margin-bottom:.5rem; }
 .btn-remove-bhp { width:32px; height:32px; border:none; background:#fbe9e7; color:#c62828; border-radius:.5rem; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
 .btn-add-bhp { display:inline-flex; align-items:center; gap:.4rem; padding:.45rem 1rem; background:#f5f6fb; border:1px dashed #d2d6da; border-radius:.5rem; font-size:.8rem; font-weight:600; color:#7b809a; cursor:pointer; margin-top:.5rem; }
 </style>
@@ -475,7 +475,7 @@ function addBhpRow() {
             ${options}
         </select>
         <div style="display:flex; align-items:stretch; flex:1; min-width:120px;">
-            <input type="number" class="form-control bhp-qty" min="1" value="1" placeholder="Jumlah" required style="border-right:0; border-top-right-radius:0; border-bottom-right-radius:0;">
+            <input type="number" class="form-control bhp-qty" min="1" value="1" placeholder="Jumlah" required style="border-right:0; border-top-right-radius:0; border-bottom-right-radius:0; min-width:60px; padding-left:0.5rem;">
             <span class="bhp-unit-label" style="background:#f5f6fb; padding:0 .75rem; border:1px solid #d2d6da; border-left:0; border-top-right-radius:.5rem; border-bottom-right-radius:.5rem; font-size:.8125rem; color:#7b809a; white-space:nowrap; display:flex; align-items:center;">-</span>
         </div>
         <button type="button" class="btn-remove-bhp" onclick="document.getElementById('${rowId}').remove()" style="flex:none;">
