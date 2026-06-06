@@ -148,7 +148,38 @@ async function run() {
         )
     `);
 
+    await db.query(`
+        CREATE TABLE maintenance_logs (
+            id                   BIGINT AUTO_INCREMENT PRIMARY KEY,
+            asset_id             BIGINT NOT NULL,
+            performed_by         BIGINT NULL,
+            maintenance_date     DATE NOT NULL,
+            description          TEXT NOT NULL,
+            condition_before     VARCHAR(100) NULL,
+            condition_after      VARCHAR(100) NOT NULL DEFAULT 'Baik',
+            cost                 DECIMAL(15,2) NULL DEFAULT 0,
+            notes                TEXT NULL,
+            created_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at           TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (asset_id)     REFERENCES assets(id) ON DELETE CASCADE,
+            FOREIGN KEY (performed_by) REFERENCES users(id) ON DELETE SET NULL
+        )
+    `);
+
+    await db.query(`
+        CREATE TABLE maintenance_consumables (
+            id              BIGINT AUTO_INCREMENT PRIMARY KEY,
+            log_id          BIGINT NOT NULL,
+            consumable_id   BIGINT NOT NULL,
+            quantity_used   INT NOT NULL DEFAULT 1,
+            created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (log_id)        REFERENCES maintenance_logs(id) ON DELETE CASCADE,
+            FOREIGN KEY (consumable_id) REFERENCES consumables(id) ON DELETE CASCADE
+        )
+    `);
+
     console.log('✅ Semua tabel berhasil dibuat.\n');
+
 
     // ── SEED: ROLES ─────────────────────────────────────────
     console.log('🌱 Seeding roles...');
@@ -166,11 +197,10 @@ async function run() {
     // ── SEED: ROOMS ─────────────────────────────────────────
     console.log('🌱 Seeding rooms...');
     const rooms = [
-        { name: 'Laboratorium Biologi 1',       code: 'LAB-BIO-01', description: 'Laboratorium praktikum biologi umum dan mikrobiologi.' },
-        { name: 'Laboratorium Biologi 2',        code: 'LAB-BIO-02', description: 'Laboratorium biologi molekuler dan genetika.' },
-        { name: 'Laboratorium Kimia',            code: 'LAB-KIM-01', description: 'Laboratorium kimia dasar dan analitik.' },
-        { name: 'Ruang Penyimpanan Reagen',      code: 'STR-01',     description: 'Ruangan penyimpanan bahan habis pakai dan reagen.' },
-        { name: 'Gudang Peralatan',              code: 'GDG-01',     description: 'Gudang penyimpanan peralatan dan instrumen lab.' },
+        { name: 'Laboratorium Komputer 1',       code: 'LAB-KOM-01', description: 'Laboratorium untuk praktikum pemrograman dasar dan algoritma.' },
+        { name: 'Laboratorium Jaringan Komputer',code: 'LAB-JAR-01', description: 'Laboratorium untuk praktikum jaringan dan keamanan komputer.' },
+        { name: 'Ruang Server Utama',            code: 'SRV-01',     description: 'Ruang server dan penyimpanan data center Teknik Informatika.' },
+        { name: 'Gudang Peralatan IT',           code: 'GDG-IT-01',  description: 'Gudang penyimpanan hardware, komponen komputer, dan kabel.' },
     ];
     for (const r of rooms) {
         await db.query(
@@ -187,8 +217,8 @@ async function run() {
     const hashedPwd = await bcrypt.hash('password123', 10);
     const users = [
         { name: 'Administrator',          email: 'admin@example.com',     role: 'Administrator' },
-        { name: 'Dr. Siti Nurhaliza',     email: 'kalab@example.com',     role: 'Kepala Laboratorium' },
-        { name: 'Prof. Budi Santoso',     email: 'kaprodi@example.com',   role: 'Ketua Program Studi' },
+        { name: 'Dr. Andreas, S.Kom., M.T.', email: 'kalab@example.com',  role: 'Kepala Laboratorium' },
+        { name: 'Mewati Ayub, S.Kom., M.T.', email: 'kaprodi@example.com',role: 'Ketua Program Studi' },
         { name: 'Staf Administrasi',      email: 'stafadmin@example.com', role: 'Staf Administrasi' },
         { name: 'Staf Laboratorium',      email: 'staflab@example.com',   role: 'Staf Laboratorium' },
     ];
@@ -208,16 +238,10 @@ async function run() {
     // ── SEED: ASSETS (Inventaris) ────────────────────────────
     console.log('🌱 Seeding assets (inventaris)...');
     const assets = [
-        { name: 'Mikroskop Olympus CX23',       code: 'BIO/MIC/24/001', category: 'Mikroskop',   room: 'LAB-BIO-01', cond: 'Baik',              year: 2024, price: 32500000 },
-        { name: 'Sentrifus Hettich EBA 200',    code: 'BIO/SEN/24/002', category: 'Sentrifus',   room: 'LAB-BIO-01', cond: 'Baik',              year: 2024, price: 28900000 },
-        { name: 'Mesin PCR Bio-Rad T100',       code: 'BIO/PCR/24/001', category: 'PCR',         room: 'LAB-BIO-01', cond: 'Perlu Maintenance', year: 2023, price: 78500000 },
-        { name: 'Inkubator Memmert IN30',       code: 'BIO/INK/22/001', category: 'Inkubator',   room: 'LAB-BIO-02', cond: 'Rusak Ringan',     year: 2022, price: 21500000 },
-        { name: 'Autoclave Hirayama HV-110',    code: 'BIO/AUT/23/001', category: 'Autoclave',   room: 'LAB-BIO-02', cond: 'Baik',              year: 2023, price: 45000000 },
-        { name: 'Spektrofotometer UV-Vis',      code: 'KIM/SPK/22/001', category: 'Spektrofotometer', room: 'LAB-KIM-01', cond: 'Baik',        year: 2022, price: 62000000 },
-        { name: 'Timbangan Analitik Ohaus',     code: 'KIM/TIM/23/001', category: 'Timbangan',   room: 'LAB-KIM-01', cond: 'Baik',              year: 2023, price: 15500000 },
-        { name: 'Oven Laboratorium Memmert',    code: 'BIO/OVN/21/001', category: 'Oven',        room: 'LAB-BIO-01', cond: 'Perlu Maintenance', year: 2021, price: 18000000 },
-        { name: 'Lemari Asam Lokal',            code: 'KIM/LAS/20/001', category: 'Lemari Asam', room: 'LAB-KIM-01', cond: 'Rusak Berat',      year: 2020, price: 35000000 },
-        { name: 'Vortex Mixer IKA MS3',         code: 'BIO/VOR/24/001', category: 'Vortex',      room: 'LAB-BIO-02', cond: 'Baik',              year: 2024, price: 8500000  },
+        { name: 'PC Desktop Dell Optiplex 7090', code: 'IT/PC/23/001', category: 'Komputer',  room: 'LAB-KOM-01', cond: 'Baik',              year: 2023, price: 15500000 },
+        { name: 'Switch Cisco Catalyst 2960',    code: 'IT/SW/22/001', category: 'Jaringan',  room: 'LAB-JAR-01', cond: 'Perlu Maintenance', year: 2022, price: 12000000 },
+        { name: 'Router MikroTik CCR1009',       code: 'IT/RT/23/001', category: 'Jaringan',  room: 'LAB-JAR-01', cond: 'Baik',              year: 2023, price: 8500000 },
+        { name: 'Server HP ProLiant DL380',      code: 'IT/SRV/21/001',category: 'Server',    room: 'SRV-01',     cond: 'Baik',              year: 2021, price: 120000000 },
     ];
     for (const a of assets) {
         await db.query(
@@ -232,26 +256,15 @@ async function run() {
     // ── SEED: CONSUMABLES (BHP) ──────────────────────────────
     console.log('🌱 Seeding consumables (BHP)...');
     const consumables = [
-        { name: 'Sarung Tangan Nitril ukuran M',    code: 'BHP/STG/001', category: 'APD',     unit: 'box (100 pcs)', stock: 24, min: 10, price: 95000,  location: 'STR-01' },
-        { name: 'Masker Bedah 3-ply',               code: 'BHP/MSK/001', category: 'APD',     unit: 'box (50 pcs)',  stock: 18, min:  8, price: 45000,  location: 'STR-01' },
-        { name: 'Alkohol 70% Teknis',               code: 'BHP/ALK/001', category: 'Reagen',  unit: 'liter',         stock: 45, min: 20, price: 32000,  location: 'STR-01' },
-        { name: 'Aquades',                          code: 'BHP/AQD/001', category: 'Reagen',  unit: 'liter',         stock:120, min: 30, price:  8000,  location: 'STR-01' },
-        { name: 'Tabung Reaksi Pyrex 16mm',         code: 'BHP/TBR/001', category: 'Gelas',   unit: 'lusin',         stock: 30, min: 10, price: 75000,  location: 'STR-01' },
-        { name: 'Cover Glass 22x22mm',              code: 'BHP/CVG/001', category: 'Gelas',   unit: 'box (100 pcs)', stock:  3, min:  5, price: 28000,  location: 'STR-01' },
-        { name: 'Tissue Culture Flask T-25',        code: 'BHP/TCF/001', category: 'Kultur',  unit: 'pcs',           stock: 25, min: 10, price: 42000,  location: 'STR-01' },
-        { name: 'Eppendorf Tube 1.5mL',             code: 'BHP/EPP/001', category: 'Plastik', unit: 'bag (500 pcs)', stock: 12, min:  5, price: 95000,  location: 'STR-01' },
-        { name: 'Tip Micropipet 1000µL',            code: 'BHP/TIP/001', category: 'Plastik', unit: 'rak (96 pcs)',  stock: 20, min:  8, price: 35000,  location: 'STR-01' },
-        { name: 'Filter Membran 0.22µm',            code: 'BHP/FLT/001', category: 'Filter',  unit: 'pcs',           stock:  2, min:  5, price:185000,  location: 'STR-01' },
-        { name: 'Kertas Saring Whatman No.1',       code: 'BHP/KSR/001', category: 'Filter',  unit: 'pack (100 pcs)',stock:  8, min:  5, price: 95000,  location: 'STR-01' },
-        { name: 'Media Agar NA (Nutrient Agar)',    code: 'BHP/MNA/001', category: 'Media',   unit: 'gram (500g)',   stock:  6, min:  3, price:285000,  location: 'STR-01' },
-        { name: 'HCl 37% pro-analysis',             code: 'BHP/HCL/001', category: 'Reagen',  unit: 'liter',         stock:  4, min:  2, price:125000,  location: 'STR-01' },
-        { name: 'NaOH Padatan p.a.',                code: 'BHP/NAO/001', category: 'Reagen',  unit: 'kg',            stock:  3, min:  2, price:145000,  location: 'STR-01' },
-        { name: 'Botol Kaca Schott 500mL',          code: 'BHP/BTL/001', category: 'Gelas',   unit: 'pcs',           stock: 15, min:  5, price: 75000,  location: 'STR-01' },
+        { name: 'Kabel UTP Cat6 Belden (Roll)',     code: 'BHP/KBL/001', category: 'Kabel',    unit: 'roll (305m)', stock: 3,  min: 1,  price: 1850000, location: 'GDG-IT-01' },
+        { name: 'Konektor RJ45 CommScope',          code: 'BHP/RJ/001',  category: 'Konektor', unit: 'box (100 pcs)', stock: 5,  min: 2,  price: 350000,  location: 'GDG-IT-01' },
+        { name: 'Thermal Paste Arctic MX-4',        code: 'BHP/TP/001',  category: 'Hardware', unit: 'tube (4g)',   stock: 12, min: 5,  price: 120000,  location: 'GDG-IT-01' },
+        { name: 'Baterai CMOS CR2032',              code: 'BHP/BTR/001', category: 'Hardware', unit: 'pcs',         stock: 50, min: 20, price: 15000,   location: 'GDG-IT-01' },
     ];
     for (const c of consumables) {
         await db.query(
             'INSERT INTO consumables (name, code, category, unit, stock, min_stock, price, location, room_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [c.name, c.code, c.category, c.unit, c.stock, c.min, c.price, c.location, roomMap['STR-01']]
+            [c.name, c.code, c.category, c.unit, c.stock, c.min, c.price, c.location, roomMap['GDG-IT-01']]
         );
     }
     console.log(`  ✓ ${consumables.length} consumables OK`);
@@ -263,15 +276,12 @@ async function run() {
     const [dr1] = await db.query(
         `INSERT INTO procurement_drafts (title, year, status, created_by, created_at)
          VALUES (?, ?, ?, ?, ?)`,
-        ['Pengadaan Tahunan Lab Biologi 2025', 2025, 'submitted', kalabId, '2025-02-24 08:00:00']
+        ['Pengadaan Lab Jaringan Komputer 2025', 2025, 'submitted', kalabId, '2025-02-24 08:00:00']
     );
     const draftId1 = dr1.insertId;
     const items1 = [
-        { type: 'inventaris', name: 'Mikroskop Olympus CX23',     price: 32500000, qty: 2, link: 'https://www.tokopedia.com/search?st=product&q=mikroskop+olympus+cx23',          replaced: assetMap['BIO/MIC/24/001'] },
-        { type: 'inventaris', name: 'Autoclave Hirayama HV-110',  price: 45000000, qty: 1, link: 'https://www.tokopedia.com/search?st=product&q=autoclave+hirayama',              replaced: null },
-        { type: 'inventaris', name: 'Inkubator Memmert IN55',     price: 38000000, qty: 1, link: 'https://www.tokopedia.com/search?st=product&q=inkubator+memmert',               replaced: assetMap['BIO/INK/22/001'] },
-        { type: 'bhp',        name: 'Sarung Tangan Nitril (S/M/L)', price: 95000, qty: 50, link: 'https://www.tokopedia.com/search?st=product&q=sarung+tangan+nitril',           replaced: null },
-        { type: 'bhp',        name: 'Masker Bedah 3-ply',         price: 45000,  qty: 30, link: 'https://www.tokopedia.com/search?st=product&q=masker+bedah',                    replaced: null },
+        { type: 'inventaris', name: 'Switch Cisco Catalyst 2960', price: 12000000, qty: 2, link: 'https://www.bhinneka.com/cisco-catalyst-2960', replaced: assetMap['IT/SW/22/001'] },
+        { type: 'bhp',        name: 'Kabel UTP Cat6 Belden',      price: 1850000,  qty: 4, link: 'https://www.bhinneka.com/belden-cat6',       replaced: null },
     ];
     for (const it of items1) {
         await db.query(
@@ -280,22 +290,18 @@ async function run() {
             [draftId1, it.type, it.name, it.price, it.qty, it.link, it.replaced]
         );
     }
-    console.log(`  ✓ Draft 1 "Pengadaan Tahunan Lab Biologi 2025" (submitted) — ${items1.length} items`);
+    console.log(`  ✓ Draft 1 "Pengadaan Lab Jaringan Komputer 2025" (submitted) — ${items1.length} items`);
 
     // Draf 2: Draft 2026
     const [dr2] = await db.query(
         `INSERT INTO procurement_drafts (title, year, status, created_by, created_at)
          VALUES (?, ?, ?, ?, ?)`,
-        ['Pengadaan Tahunan Lab Biologi 2026', 2026, 'draft', kalabId, '2026-02-12 09:30:00']
+        ['Pengadaan Lab Komputer 2026', 2026, 'draft', kalabId, '2026-02-12 09:30:00']
     );
     const draftId2 = dr2.insertId;
     const items2 = [
-        { type: 'inventaris', name: 'Mesin PCR Bio-Rad T100',          price: 78500000, qty: 1, link: 'https://www.tokopedia.com/search?st=product&q=mesin+pcr+bio-rad',          replaced: assetMap['BIO/PCR/24/001'] },
-        { type: 'inventaris', name: 'Spektrofotometer UV-Vis Double Beam', price: 85000000, qty: 1, link: 'https://www.tokopedia.com/search?st=product&q=spektrofotometer+uv-vis', replaced: assetMap['KIM/SPK/22/001'] },
-        { type: 'inventaris', name: 'Lemari Asam FRP 1200mm',          price: 65000000, qty: 1, link: 'https://www.tokopedia.com/search?st=product&q=lemari+asam+frp',             replaced: assetMap['KIM/LAS/20/001'] },
-        { type: 'bhp',        name: 'Cover Glass 22x22mm',             price: 28000,    qty: 20, link: 'https://www.tokopedia.com/search?st=product&q=cover+glass+laboratorium',   replaced: null },
-        { type: 'bhp',        name: 'Filter Membran 0.22µm',           price: 185000,   qty: 10, link: 'https://www.tokopedia.com/search?st=product&q=filter+membran+0.22',         replaced: null },
-        { type: 'bhp',        name: 'Media Agar NA (Nutrient Agar)',   price: 285000,   qty:  5, link: 'https://www.tokopedia.com/search?st=product&q=nutrient+agar',               replaced: null },
+        { type: 'inventaris', name: 'PC Desktop Dell Optiplex 7090', price: 15500000, qty: 10, link: 'https://www.bhinneka.com/dell-optiplex-7090', replaced: null },
+        { type: 'bhp',        name: 'Thermal Paste Arctic MX-4',     price: 120000,   qty: 5,  link: 'https://www.tokopedia.com/arctic-mx-4',   replaced: null },
     ];
     for (const it of items2) {
         await db.query(
@@ -304,9 +310,95 @@ async function run() {
             [draftId2, it.type, it.name, it.price, it.qty, it.link, it.replaced]
         );
     }
-    console.log(`  ✓ Draft 2 "Pengadaan Tahunan Lab Biologi 2026" (draft) — ${items2.length} items`);
+    console.log(`  ✓ Draft 2 "Pengadaan Lab Komputer 2026" (draft) — ${items2.length} items`);
+
+    // ── SEED: MAINTENANCE LOGS ──────────────────────────────
+    console.log('🌱 Seeding maintenance logs...');
+
+    const stafLabId = userMap['staflab@example.com'];
+
+    // Ambil ID consumables dari DB setelah seed
+    const [consRows] = await db.query('SELECT * FROM consumables');
+    const consMap = Object.fromEntries(consRows.map(c => [c.code, { id: c.id, stock: c.stock }]));
+
+    // Helper untuk insert log dan catat BHP yang digunakan
+    async function seedLog({ assetCode, date, desc, condBefore, condAfter, cost, notes, bhpUsed }) {
+        const assetId = assetMap[assetCode];
+        if (!assetId) { console.log(`  ⚠ Aset ${assetCode} tidak ditemukan, skip.`); return; }
+
+        const [logRes] = await db.query(
+            `INSERT INTO maintenance_logs
+             (asset_id, performed_by, maintenance_date, description, condition_before, condition_after, cost, notes, created_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [assetId, stafLabId, date, desc, condBefore, condAfter, cost, notes, `${date} 08:00:00`]
+        );
+        const logId = logRes.insertId;
+
+        // Update kondisi aset
+        await db.query(
+            'UPDATE assets SET condition_status=?, status=?, updated_at=NOW() WHERE id=?',
+            [condAfter, condAfter, assetId]
+        );
+
+        // Catat BHP yang digunakan & kurangi stok
+        for (const { code, qty } of (bhpUsed || [])) {
+            const cons = consMap[code];
+            if (!cons) { console.log(`  ⚠ BHP ${code} tidak ditemukan, skip.`); continue; }
+            await db.query(
+                'INSERT INTO maintenance_consumables (log_id, consumable_id, quantity_used) VALUES (?, ?, ?)',
+                [logId, cons.id, qty]
+            );
+            await db.query(
+                'UPDATE consumables SET stock = stock - ?, updated_at=NOW() WHERE id=?',
+                [qty, cons.id]
+            );
+            cons.stock -= qty; // update local cache
+        }
+    }
+
+    await seedLog({
+        assetCode  : 'IT/PC/23/001',
+        date       : '2026-04-10',
+        desc       : 'Pembersihan debu pada heatsink dan penggantian thermal paste CPU',
+        condBefore : 'Baik',
+        condAfter  : 'Baik',
+        cost       : 0,
+        notes      : 'Suhu CPU kembali normal, di bawah 40C saat idle.',
+        bhpUsed    : [
+            { code: 'BHP/TP/001', qty: 1 },
+        ],
+    });
+
+    await seedLog({
+        assetCode  : 'IT/SW/22/001',
+        date       : '2026-04-22',
+        desc       : 'Crimping ulang kabel uplink switch karena koneksi tidak stabil',
+        condBefore : 'Perlu Maintenance',
+        condAfter  : 'Perlu Maintenance',
+        cost       : 50000,
+        notes      : 'Konektor RJ45 diganti baru. Port switch nomor 4 masih bermasalah, perlu dianalisis lebih lanjut.',
+        bhpUsed    : [
+            { code: 'BHP/RJ/001', qty: 2 },
+        ],
+    });
+
+    await seedLog({
+        assetCode  : 'IT/SRV/21/001',
+        date       : '2026-05-05',
+        desc       : 'Penggantian baterai CMOS motherboard server',
+        condBefore : 'Perlu Maintenance',
+        condAfter  : 'Baik',
+        cost       : 0,
+        notes      : 'Tanggal dan waktu BIOS sering reset, baterai CMOS berhasil diganti.',
+        bhpUsed    : [
+            { code: 'BHP/BTR/001', qty: 1 },
+        ],
+    });
+
+    console.log('  ✓ 3 maintenance logs OK');
 
     await db.end();
+
 
     console.log('\n════════════════════════════════════════════════');
     console.log('✅  Database reset & seed selesai!');

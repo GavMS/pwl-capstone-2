@@ -204,6 +204,36 @@
                 </li>
                 @endif
                 
+                @if(isset($user['role']) && $user['role'] === 'Staf Laboratorium')
+                <li class="mt-0.5 w-full">
+                    <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors {{ request()->routeIs('staflab.bhp.*') ? 'active-nav-item' : 'text-slate-600 hover:text-slate-900' }}"
+                       href="{{ route('staflab.bhp.index') }}">
+                        <div class="nav-icon mr-2 flex h-8 w-8 items-center justify-center rounded-lg {{ request()->routeIs('staflab.bhp.*') ? 'active-icon' : '' }}">
+                            <i class="fas fa-flask {{ request()->routeIs('staflab.bhp.*') ? 'text-white' : 'text-slate-700' }} text-sm"></i>
+                        </div>
+                        <span class="ml-1 duration-300 opacity-100 pointer-events-none ease-soft">Manajemen BHP</span>
+                    </a>
+                </li>
+                <li class="mt-0.5 w-full">
+                    <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors {{ request()->routeIs('staflab.inventaris.*') ? 'active-nav-item' : 'text-slate-600 hover:text-slate-900' }}"
+                       href="{{ route('staflab.inventaris.index') }}">
+                        <div class="nav-icon mr-2 flex h-8 w-8 items-center justify-center rounded-lg {{ request()->routeIs('staflab.inventaris.*') ? 'active-icon' : '' }}">
+                            <i class="fas fa-tools {{ request()->routeIs('staflab.inventaris.*') ? 'text-white' : 'text-slate-700' }} text-sm"></i>
+                        </div>
+                        <span class="ml-1 duration-300 opacity-100 pointer-events-none ease-soft">Inventaris & Maintenance</span>
+                    </a>
+                </li>
+                <li class="mt-0.5 w-full">
+                    <a class="py-2.7 text-sm ease-nav-brand my-0 mx-4 flex items-center whitespace-nowrap px-4 transition-colors {{ request()->routeIs('staflab.maintenance.*') ? 'active-nav-item' : 'text-slate-600 hover:text-slate-900' }}"
+                       href="{{ route('staflab.maintenance.index') }}">
+                        <div class="nav-icon mr-2 flex h-8 w-8 items-center justify-center rounded-lg {{ request()->routeIs('staflab.maintenance.*') ? 'active-icon' : '' }}">
+                            <i class="fas fa-history {{ request()->routeIs('staflab.maintenance.*') ? 'text-white' : 'text-slate-700' }} text-sm"></i>
+                        </div>
+                        <span class="ml-1 duration-300 opacity-100 pointer-events-none ease-soft">Riwayat Maintenance</span>
+                    </a>
+                </li>
+                @endif
+                
             </ul>
         </div>
 
