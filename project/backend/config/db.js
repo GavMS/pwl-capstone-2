@@ -253,6 +253,48 @@ const testConnection = async () => {
             console.log('Added review_status column to procurement_items table.');
         }
 
+        // ── Safe migration: kolom inventaris baru di assets (label / QR / penerimaan / asal pengadaan) ──
+        // assets.label_number — nomor label fisik (UNIQUE; NULL ganda diizinkan MySQL)
+        const [labelCols] = await connection.query(`
+            SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'assets' AND COLUMN_NAME = 'label_number'
+        `);
+        if (labelCols.length === 0) {
+            await connection.query(`ALTER TABLE assets ADD COLUMN label_number VARCHAR(255) NULL UNIQUE`);
+            console.log('Added label_number column to assets table.');
+        }
+
+        // assets.qr_path — path file PNG QR di storage Laravel
+        const [qrCols] = await connection.query(`
+            SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'assets' AND COLUMN_NAME = 'qr_path'
+        `);
+        if (qrCols.length === 0) {
+            await connection.query(`ALTER TABLE assets ADD COLUMN qr_path VARCHAR(500) NULL`);
+            console.log('Added qr_path column to assets table.');
+        }
+
+        // assets.received_date — tanggal penerimaan (NULL = belum diterima / menunggu penerimaan)
+        const [recvCols] = await connection.query(`
+            SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'assets' AND COLUMN_NAME = 'received_date'
+        `);
+        if (recvCols.length === 0) {
+            await connection.query(`ALTER TABLE assets ADD COLUMN received_date DATE NULL`);
+            console.log('Added received_date column to assets table.');
+        }
+
+        // assets.source_item_id — jejak asal pengadaan + cegah materialisasi ganda (FK ke procurement_items)
+        const [srcCols] = await connection.query(`
+            SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'assets' AND COLUMN_NAME = 'source_item_id'
+        `);
+        if (srcCols.length === 0) {
+            await connection.query(`ALTER TABLE assets ADD COLUMN source_item_id BIGINT NULL`);
+            await connection.query(`ALTER TABLE assets ADD CONSTRAINT fk_assets_source_item FOREIGN KEY (source_item_id) REFERENCES procurement_items(id) ON DELETE SET NULL`);
+            console.log('Added source_item_id column + FK to assets table.');
+        }
+
         // Ensure users.room_id column exists (safe migration)
         const [uCols] = await connection.query(`
             SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS

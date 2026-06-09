@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
 
 class StafAdminController extends Controller
 {
@@ -90,13 +91,13 @@ class StafAdminController extends Controller
     }
 
     // ─────────────────────────────────────────────
-    // GET /stafadmin/inventaris — Daftar barang inventaris dari semua draf disetujui
+    // GET /stafadmin/inventaris — Aset hasil pengadaan untuk labeling
     // ─────────────────────────────────────────────
     public function inventaris()
     {
         try {
             $response = Http::withHeaders($this->authHeaders())
-                ->get("{$this->apiUrl()}/api/procurement");
+                ->get("{$this->apiUrl()}/api/assets/procurement");
 
             if (in_array($response->status(), [401, 403])) {
                 Session::forget('token');
@@ -105,41 +106,68 @@ class StafAdminController extends Controller
                     ->withErrors(['email' => 'Sesi Anda telah berakhir. Silakan login kembali.']);
             }
 
-            $allDrafts = $response->successful() ? ($response->json()['drafts'] ?? []) : [];
+            $assets = $response->successful() ? ($response->json()['assets'] ?? []) : [];
+            $error  = $response->successful() ? null : ($response->json()['message'] ?? 'Gagal mengambil data inventaris.');
+        } catch (\Exception $e) {
+            $assets = [];
+            $error  = 'Tidak dapat terhubung ke server backend. Pastikan server Node.js berjalan.';
+        }
 
-            // Filter hanya draf approved
-            $approvedDrafts = array_values(array_filter($allDrafts, fn($d) => ($d['status'] ?? '') === 'approved'));
+        return view('stafadmin.inventaris.index', [
+            'user'   => Session::get('user', []),
+            'assets' => $assets,
+            'error'  => $error ?? null,
+        ]);
+    }
 
-            // Kumpulkan semua item inventaris dari setiap draf approved
-            $inventarisItems = [];
-            foreach ($approvedDrafts as $draft) {
-                $detailResp = Http::withHeaders($this->authHeaders())
-                    ->get("{$this->apiUrl()}/api/procurement/{$draft['id']}");
+    // ─────────────────────────────────────────────
+    // POST /stafadmin/inventaris/{id}/label — Simpan label + QR (file) + tanggal terima
+    // ─────────────────────────────────────────────
+    public function saveLabel(Request $request, $id)
+    {
+        $request->validate([
+            'label_number'  => 'nullable|string|max:255',
+            'received_date' => 'nullable|date',
+            'qr_data_url'   => 'nullable|string',
+        ]);
 
-                if (!$detailResp->successful()) continue;
-
-                $items = $detailResp->json()['items'] ?? [];
-                foreach ($items as $index => $item) {
-                    if (($item['item_type'] ?? '') === 'inventaris') {
-                        $item['draft_id']    = $draft['id'];
-                        $item['draft_title'] = $draft['title'];
-                        $item['draft_year']  = $draft['year'];
-                        $item['original_index'] = $index;
-                        $inventarisItems[]   = $item;
+        try {
+            // Simpan gambar QR (PNG base64 dari browser) ke storage publik
+            $qrPath = null;
+            $dataUrl = $request->input('qr_data_url');
+            if ($dataUrl && str_starts_with($dataUrl, 'data:image')) {
+                $parts = explode(',', $dataUrl, 2);
+                if (count($parts) === 2) {
+                    $binary = base64_decode($parts[1]);
+                    if ($binary !== false) {
+                        $filename = "qr/asset-{$id}.png";
+                        Storage::disk('public')->put($filename, $binary);
+                        $qrPath = Storage::url($filename); // /storage/qr/asset-{id}.png
                     }
                 }
             }
 
-            $error = $response->successful() ? null : ($response->json()['message'] ?? 'Gagal mengambil data.');
-        } catch (\Exception $e) {
-            $inventarisItems = [];
-            $error = 'Tidak dapat terhubung ke server backend. Pastikan server Node.js berjalan.';
-        }
+            $payload = [
+                'label_number'  => $request->input('label_number'),
+                'received_date' => $request->input('received_date'),
+            ];
+            if ($qrPath !== null) {
+                $payload['qr_path'] = $qrPath;
+            }
 
-        return view('stafadmin.inventaris.index', [
-            'user'            => Session::get('user', []),
-            'inventarisItems' => $inventarisItems,
-            'error'           => $error ?? null,
-        ]);
+            $response = Http::withHeaders($this->authHeaders())
+                ->patch("{$this->apiUrl()}/api/assets/{$id}", $payload);
+
+            if ($response->successful()) {
+                return redirect()->route('stafadmin.inventaris.index')
+                    ->with('success', 'Data inventaris berhasil disimpan.');
+            }
+
+            return redirect()->route('stafadmin.inventaris.index')
+                ->withErrors(['api' => $response->json()['message'] ?? 'Gagal menyimpan data inventaris.']);
+        } catch (\Exception $e) {
+            return redirect()->route('stafadmin.inventaris.index')
+                ->withErrors(['api' => 'Tidak dapat terhubung ke server backend.']);
+        }
     }
 }

@@ -141,10 +141,16 @@ exports.updateDraft = async (req, res) => {
 
     try {
         // 1. Cek keberadaan draf
-        const [existing] = await connection.query('SELECT id FROM procurement_drafts WHERE id = ?', [id]);
+        const [existing] = await connection.query('SELECT id, status FROM procurement_drafts WHERE id = ?', [id]);
         if (existing.length === 0) {
             connection.release();
             return res.status(404).json({ message: 'Draf pengadaan tidak ditemukan' });
+        }
+
+        // 1b. Draf yang sudah dikunci tidak boleh diubah lagi
+        if (existing[0].status !== 'draft') {
+            connection.release();
+            return res.status(400).json({ message: 'Draf sudah diajukan/difinalisasi dan tidak dapat diubah lagi.' });
         }
 
         // 2. Update Header
@@ -197,9 +203,14 @@ exports.deleteDraft = async (req, res) => {
     const { id } = req.params;
     try {
         // Cek draf ada
-        const [existing] = await db.query('SELECT id FROM procurement_drafts WHERE id = ?', [id]);
+        const [existing] = await db.query('SELECT id, status FROM procurement_drafts WHERE id = ?', [id]);
         if (existing.length === 0) {
             return res.status(404).json({ message: 'Draf pengadaan tidak ditemukan' });
+        }
+
+        // Hanya draf mentah (belum diajukan) yang boleh dihapus
+        if (existing[0].status !== 'draft') {
+            return res.status(400).json({ message: 'Draf yang sudah diajukan/difinalisasi tidak dapat dihapus.' });
         }
 
         // Hapus draf (item otomatis terhapus karena ON DELETE CASCADE)
@@ -253,7 +264,7 @@ exports.finalizeDraft = async (req, res) => {
     await connection.beginTransaction();
 
     try {
-        const [drafts] = await connection.query('SELECT id, status FROM procurement_drafts WHERE id = ?', [id]);
+        const [drafts] = await connection.query('SELECT id, status, year FROM procurement_drafts WHERE id = ?', [id]);
         if (drafts.length === 0) {
             connection.release();
             return res.status(404).json({ message: 'Draf tidak ditemukan' });
@@ -275,8 +286,30 @@ exports.finalizeDraft = async (req, res) => {
             [id]
         );
 
+        // ── Materialisasi inventaris: tiap item 'inventaris' yang disetujui → 1 baris aset nyata ──
+        // (per-baris item; BHP dilewati; idempotent via assets.source_item_id)
+        const [approvedInvItems] = await connection.query(
+            `SELECT pi.id, pi.name, pi.price
+             FROM procurement_items pi
+             WHERE pi.draft_id = ?
+               AND pi.item_type = 'inventaris'
+               AND pi.review_status = 'approved'
+               AND NOT EXISTS (SELECT 1 FROM assets a WHERE a.source_item_id = pi.id)`,
+            [id]
+        );
+        for (const item of approvedInvItems) {
+            await connection.query(
+                `INSERT INTO assets (name, condition_status, year, price, status, source_item_id, received_date)
+                 VALUES (?, 'Baik', ?, ?, 'Baik', ?, NULL)`,
+                [item.name, drafts[0].year, item.price || 0, item.id]
+            );
+        }
+
         await connection.commit();
-        res.json({ message: 'Draf berhasil difinalisasi. Item yang belum diputuskan otomatis disetujui.' });
+        res.json({
+            message: 'Draf berhasil difinalisasi. Item yang belum diputuskan otomatis disetujui.',
+            assets_created: approvedInvItems.length
+        });
     } catch (error) {
         await connection.rollback();
         console.error('finalizeDraft error:', error);
