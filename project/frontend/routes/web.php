@@ -86,6 +86,7 @@ Route::prefix('stafadmin')->middleware('role:Staf Administrasi')->group(function
     Route::get('/procurement',        [StafAdminController::class, 'index'])->name('stafadmin.procurement.index');
     Route::get('/procurement/{id}',   [StafAdminController::class, 'show'])->name('stafadmin.procurement.show');
     Route::get('/inventaris',         [StafAdminController::class, 'inventaris'])->name('stafadmin.inventaris.index');
+    Route::post('/inventaris/{id}/label', [StafAdminController::class, 'saveLabel'])->name('stafadmin.inventaris.label');
 });
 
 // ─────────────────────────────────────────────
