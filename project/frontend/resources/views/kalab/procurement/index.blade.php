@@ -372,9 +372,17 @@
                                 <span class="cell-text" style="font-weight: 600;">{{ $d['item_count'] }} item</span>
                             </td>
                             <td style="text-align:right;">
-                                <span class="cell-text" style="font-weight: 600; color:#344767;">
+                                @if(in_array($d['status'] ?? 'draft', ['approved', 'rejected']))
+                                <span class="cell-text" style="font-weight: 600; color:#15803d;" title="Anggaran Disetujui">
+                                    Rp {{ number_format($d['approved_total_price'] ?? $d['total_price'], 0, ',', '.') }}
+                                </span>
+                                <br><span style="font-size: .65rem; color:#adb5bd; text-transform:uppercase; font-weight:700;">Disetujui</span>
+                                @else
+                                <span class="cell-text" style="font-weight: 600; color:#344767;" title="Anggaran Diusulkan">
                                     Rp {{ number_format($d['total_price'], 0, ',', '.') }}
                                 </span>
+                                <br><span style="font-size: .65rem; color:#adb5bd; text-transform:uppercase; font-weight:700;">Diusulkan</span>
+                                @endif
                             </td>
                             <td style="text-align:center;">
                                 @if(($d['status'] ?? 'draft') === 'draft')

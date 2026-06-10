@@ -348,7 +348,8 @@
                             <th style="width:80px; text-align:center;">Qty</th>
                             <th style="width:180px; text-align:right;">Total Harga</th>
                             <th style="width:180px; text-align:center;">Link Pembelian</th>
-                            <th style="width:220px;">Menggantikan</th>
+                            <th style="width:150px;">Menggantikan</th>
+                            <th style="width:160px; text-align:center;">Status & Catatan Kaprodi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -428,6 +429,25 @@
                                     <span style="font-size:.75rem; color:#d2d6da; font-style:italic;">— Tidak Ada —</span>
                                 @endif
                             </td>
+
+                            {{-- Status Review Kaprodi --}}
+                            <td style="text-align:center;">
+                                @if(($draft['status'] ?? 'draft') !== 'draft')
+                                    @php $rs = $item['review_status'] ?? 'pending'; @endphp
+                                    @if($rs === 'approved')
+                                        <span class="status-badge status-approved" style="padding:.2rem .6rem;"><span class="sb-dot"></span> Disetujui</span>
+                                    @elseif($rs === 'rejected')
+                                        <span class="status-badge status-rejected" style="padding:.2rem .6rem;"><span class="sb-dot"></span> Ditolak</span>
+                                    @else
+                                        <span class="status-badge" style="background:#f1f5f9; color:#64748b; padding:.2rem .6rem;"><span class="sb-dot" style="background:#94a3b8;"></span> Menunggu</span>
+                                    @endif
+                                    @if(!empty($item['review_notes']))
+                                        <p style="font-size:.7rem; color:#f59e0b; margin-top:.3rem; line-height:1.2; font-weight:600;"><i class="fas fa-comment-dots"></i> {{ $item['review_notes'] }}</p>
+                                    @endif
+                                @else
+                                    <span style="font-size:.75rem; color:#d2d6da; font-style:italic;">—</span>
+                                @endif
+                            </td>
                         </tr>
                         @empty
                         <tr>
@@ -449,12 +469,29 @@
                 <div>
                     <p class="grand-total-label">
                         <i class="fas fa-calculator mr-1"></i>
-                        Total Keseluruhan Anggaran ({{ count($items) }} item)
+                        Total Keseluruhan Usulan ({{ count($items) }} item)
                     </p>
                     <p class="grand-total-value">
                         Rp {{ number_format(collect($items)->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1)), 0, ',', '.') }}
                     </p>
                 </div>
+
+                @php
+                    $isReviewed = in_array($draft['status'] ?? 'draft', ['approved', 'rejected']);
+                    $totalApproved = collect($items)->filter(fn($i) => ($i['review_status'] ?? 'pending') !== 'rejected')->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1));
+                    $totalRejected = collect($items)->filter(fn($i) => ($i['review_status'] ?? 'pending') === 'rejected')->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1));
+                @endphp
+
+                @if($isReviewed)
+                <div style="text-align:right;">
+                    @if($totalRejected > 0)
+                    <p style="font-size:.7rem; color:#adb5bd; font-weight:600; text-transform:uppercase; margin-bottom:.15rem;">Ditolak Kaprodi</p>
+                    <p style="font-size:.85rem; font-weight:700; color:#dc2626; margin:0 0 .35rem;">- Rp {{ number_format($totalRejected, 0, ',', '.') }}</p>
+                    @endif
+                    <p style="font-size:.7rem; color:#15803d; font-weight:600; text-transform:uppercase; margin-bottom:.15rem;">Total Disetujui</p>
+                    <p style="font-size:1.1rem; font-weight:800; color:#15803d; margin:0;">Rp {{ number_format($totalApproved, 0, ',', '.') }}</p>
+                </div>
+                @else
                 <div style="text-align:right;">
                     <p style="font-size:.7rem; color:#adb5bd; font-weight:600; text-transform:uppercase; margin-bottom:.25rem;">
                         Rata-rata per item
@@ -467,6 +504,7 @@
                         Rp {{ number_format($avg, 0, ',', '.') }}
                     </p>
                 </div>
+                @endif
             </div>
             @endif
 
