@@ -215,7 +215,7 @@ select.item-input { appearance: none; -webkit-appearance: none; cursor: pointer;
                                     <th style="width:140px;">Harga Satuan (Rp)</th>
                                     <th style="width:80px;">Qty</th>
                                     <th style="width:180px;">Link Pembelian</th>
-                                    <th style="width:180px;">Menggantikan Aset</th>
+                                    <th id="replaceHeader" style="width:180px;">Menggantikan Aset</th>
                                     <th style="width:120px;">Catatan</th>
                                     <th id="aksiHeader" style="width:50px; text-align:center;">Aksi</th>
                                 </tr>
@@ -250,7 +250,8 @@ select.item-input { appearance: none; -webkit-appearance: none; cursor: pointer;
 </div>
 
 <script>
-const assets = @json($assets);
+const assets      = @json($assets);       // list inventaris
+const consumables = @json($consumables);  // list BHP (tidak dipakai di dropdown, tapi dikirim untuk referensi)
 const initialItems = @json($items);
 let itemIndex = 0;
 
@@ -268,6 +269,9 @@ function addItemRow(data = null) {
     tr.id = `item-row-${itemIndex}`;
     tr.className = 'item-row';
 
+    const currentType = data ? data.item_type : 'inventaris';
+
+    // Opsi dropdown inventaris
     let assetOptions = '<option value="">— Tidak Mengganti —</option>';
     assets.forEach(a => {
         const sel = (data && data.replaced_asset_id == a.id) ? 'selected' : '';
@@ -276,17 +280,18 @@ function addItemRow(data = null) {
 
     tr.innerHTML = `
         <td>
-            <select name="items[${itemIndex}][item_type]" class="item-input" required>
-                <option value="inventaris" ${(data && data.item_type === 'inventaris') ? 'selected' : ''}>Inventaris</option>
-                <option value="bhp" ${(data && data.item_type === 'bhp') ? 'selected' : ''}>BHP</option>
+            <select name="items[${itemIndex}][item_type]" class="item-input type-select" required onchange="onTypeChange(this)">
+                <option value="inventaris" ${currentType === 'inventaris' ? 'selected' : ''}>Inventaris</option>
+                <option value="bhp"        ${currentType === 'bhp'        ? 'selected' : ''}>BHP</option>
             </select>
         </td>
         <td><input type="text" name="items[${itemIndex}][name]" class="item-input" placeholder="Nama barang..." value="${data ? escHtml(data.name) : ''}" required></td>
         <td><input type="number" name="items[${itemIndex}][price]" class="item-input calc-trigger input-price" min="0" placeholder="0" value="${data ? data.price : '0'}" required></td>
         <td><input type="number" name="items[${itemIndex}][quantity]" class="item-input calc-trigger input-qty" min="1" placeholder="1" value="${data ? data.quantity : '1'}" required></td>
         <td><input type="url" name="items[${itemIndex}][purchase_link]" class="item-input" placeholder="https://..." value="${data ? escHtml(data.purchase_link || '') : ''}"></td>
-        <td>
-            <select name="items[${itemIndex}][replaced_asset_id]" class="item-input">${assetOptions}</select>
+        <td class="replace-cell">
+            <select name="items[${itemIndex}][replaced_asset_id]" class="item-input replace-select" ${currentType === 'bhp' ? 'style="display:none;"' : ''}>${assetOptions}</select>
+            <input type="text" class="item-input replace-disabled" value="Tidak berlaku (BHP)" disabled style="background-color: #f8f9fa; color: #adb5bd; cursor: not-allowed; ${currentType === 'inventaris' ? 'display:none;' : ''}" />
         </td>
         <td><input type="text" name="items[${itemIndex}][notes]" class="item-input" placeholder="Catatan..." value="${data ? escHtml(data.notes || '') : ''}"></td>
         <td class="aksi-col" style="text-align:center;">
@@ -301,6 +306,22 @@ function addItemRow(data = null) {
     itemIndex++;
     calculateGrandTotal();
     updateRemoveVisibility();
+}
+
+// ── Dipanggil saat tipe berubah ──────────────────────────────
+function onTypeChange(selectEl) {
+    const row = selectEl.closest('tr');
+    const replaceSelect = row.querySelector('.replace-select');
+    const replaceDisabled = row.querySelector('.replace-disabled');
+
+    if (selectEl.value === 'bhp') {
+        replaceSelect.style.display = 'none';
+        replaceSelect.value = ''; // reset nilai
+        replaceDisabled.style.display = '';
+    } else {
+        replaceSelect.style.display = '';
+        replaceDisabled.style.display = 'none';
+    }
 }
 
 function escHtml(str) {

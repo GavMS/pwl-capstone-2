@@ -61,6 +61,7 @@ Route::prefix('kalab')->middleware('role:Kepala Laboratorium')->group(function (
     Route::get('/procurement/{id}',         [ProcurementController::class, 'show'])->name('kalab.procurement.show');
     Route::get('/procurement/{id}/edit',    [ProcurementController::class, 'edit'])->name('kalab.procurement.edit');
     Route::put('/procurement/{id}',         [ProcurementController::class, 'update'])->name('kalab.procurement.update');
+    Route::patch('/procurement/{id}/submit',[ProcurementController::class, 'submit'])->name('kalab.procurement.submit');
     Route::delete('/procurement/{id}',      [ProcurementController::class, 'destroy'])->name('kalab.procurement.destroy');
     
     // Inventaris & BHP

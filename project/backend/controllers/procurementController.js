@@ -7,8 +7,9 @@ exports.getAllDrafts = async (req, res) => {
     try {
         const query = `
             SELECT pd.*, u.name AS creator_name,
-                   COALESCE(items.item_count, 0) AS item_count,
-                   COALESCE(items.total_price, 0) AS total_price
+                   COALESCE(items.item_count, 0)          AS item_count,
+                   COALESCE(items.total_price, 0)         AS total_price,
+                   COALESCE(approved.approved_total, 0)   AS approved_total_price
             FROM procurement_drafts pd
             LEFT JOIN users u ON pd.created_by = u.id
             LEFT JOIN (
@@ -16,6 +17,12 @@ exports.getAllDrafts = async (req, res) => {
                 FROM procurement_items
                 GROUP BY draft_id
             ) items ON pd.id = items.draft_id
+            LEFT JOIN (
+                SELECT draft_id, SUM(price * quantity) AS approved_total
+                FROM procurement_items
+                WHERE review_status != 'rejected'
+                GROUP BY draft_id
+            ) approved ON pd.id = approved.draft_id
             ORDER BY pd.created_at DESC
         `;
         const [rows] = await db.query(query);
@@ -340,15 +347,15 @@ exports.getStats = async (req, res) => {
 };
 
 // ─────────────────────────────────────────────────────────
-// PATCH /api/procurement/:id/status — Update status draf (approve/reject)
+// PATCH /api/procurement/:id/status — Update status draf (submit/approve/reject)
 // ─────────────────────────────────────────────────────────
 exports.updateStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const validStatuses = ['approved', 'rejected'];
+    const validStatuses = ['approved', 'rejected', 'submitted'];
     if (!status || !validStatuses.includes(status)) {
-        return res.status(400).json({ message: 'Status tidak valid. Harus "approved" atau "rejected".' });
+        return res.status(400).json({ message: 'Status tidak valid. Harus "submitted", "approved", atau "rejected".' });
     }
 
     try {
@@ -356,8 +363,16 @@ exports.updateStatus = async (req, res) => {
         if (existing.length === 0) {
             return res.status(404).json({ message: 'Draf pengadaan tidak ditemukan' });
         }
-        if (existing[0].status !== 'submitted') {
-            return res.status(400).json({ message: 'Hanya draf yang telah diajukan (submitted) yang dapat disetujui atau ditolak.' });
+
+        // Validasi transisi status
+        if (status === 'submitted') {
+            if (existing[0].status !== 'draft') {
+                return res.status(400).json({ message: 'Hanya draf mentah (draft) yang dapat diajukan (submitted).' });
+            }
+        } else if (status === 'approved' || status === 'rejected') {
+            if (existing[0].status !== 'submitted') {
+                return res.status(400).json({ message: 'Hanya draf yang telah diajukan (submitted) yang dapat disetujui atau ditolak.' });
+            }
         }
 
         await db.query('UPDATE procurement_drafts SET status = ?, updated_at = NOW() WHERE id = ?', [status, id]);

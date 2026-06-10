@@ -80,7 +80,7 @@
                     <th>Judul Usulan</th>
                     <th style="text-align:center;">Tahun</th>
                     <th style="text-align:center;">Item</th>
-                    <th style="text-align:right;">Total Anggaran</th>
+                    <th style="text-align:right;">Anggaran Disetujui</th>
                     <th style="text-align:center;">Status</th>
                     <th style="text-align:center;width:80px;">Aksi</th>
                 </tr>
@@ -91,7 +91,7 @@
                     <td><p class="cell-title">{{ $d['title'] }}</p></td>
                     <td style="text-align:center;"><span class="cell-text">{{ $d['year'] }}</span></td>
                     <td style="text-align:center;"><span class="cell-text" style="font-weight:600;">{{ $d['item_count'] }} item</span></td>
-                    <td style="text-align:right;"><span class="cell-text" style="font-weight:600;color:#344767;">Rp {{ number_format($d['total_price'],0,',','.') }}</span></td>
+                    <td style="text-align:right;"><span class="cell-text" style="font-weight:600;color:#15803d;">Rp {{ number_format($d['approved_total_price'] ?? $d['total_price'],0,',','.') }}</span></td>
                     <td style="text-align:center;">
                         <span class="status-badge sb-approved">
                             <span class="status-dot"></span> Disetujui

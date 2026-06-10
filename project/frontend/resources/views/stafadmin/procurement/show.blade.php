@@ -463,9 +463,9 @@
                 <div class="info-box">
                     <div class="info-box-icon"><i class="fas fa-wallet"></i></div>
                     <div>
-                        <p class="info-box-title">Total Anggaran</p>
-                        <p class="info-box-value" style="color:#2152ff;">
-                            Rp {{ number_format(collect($items)->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1)), 0, ',', '.') }}
+                        <p class="info-box-title">Anggaran Disetujui</p>
+                        <p class="info-box-value" style="color:#15803d;">
+                            Rp {{ number_format(collect($items)->filter(fn($i) => ($i['review_status'] ?? 'pending') !== 'rejected')->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1)), 0, ',', '.') }}
                         </p>
                     </div>
                 </div>
@@ -724,25 +724,25 @@
             <div class="grand-total-bar">
                 <div>
                     <p class="grand-total-label">
-                        <i class="fas fa-calculator mr-1"></i>
-                        Total Keseluruhan Anggaran ({{ count($items) }} item)
+                        <i class="fas fa-check-circle mr-1" style="color:#15803d;"></i>
+                        Anggaran Disetujui ({{ collect($items)->filter(fn($i) => ($i['review_status'] ?? 'pending') !== 'rejected')->count() }} item)
                     </p>
-                    <p class="grand-total-value">
-                        Rp {{ number_format(collect($items)->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1)), 0, ',', '.') }}
+                    <p class="grand-total-value" style="color:#15803d;">
+                        Rp {{ number_format(collect($items)->filter(fn($i) => ($i['review_status'] ?? 'pending') !== 'rejected')->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1)), 0, ',', '.') }}
                     </p>
                 </div>
+                @php
+                    $totalAllSA      = collect($items)->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1));
+                    $totalRejectedSA = collect($items)->filter(fn($i) => ($i['review_status'] ?? 'pending') === 'rejected')->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1));
+                @endphp
+                @if($totalRejectedSA > 0)
                 <div style="text-align:right;">
-                    <p style="font-size:.7rem; color:#adb5bd; font-weight:600; text-transform:uppercase; margin-bottom:.25rem;">
-                        Rata-rata per item
-                    </p>
-                    <p style="font-size:.9rem; font-weight:700; color:#344767;">
-                        @php
-                            $total = collect($items)->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1));
-                            $avg   = count($items) > 0 ? $total / count($items) : 0;
-                        @endphp
-                        Rp {{ number_format($avg, 0, ',', '.') }}
-                    </p>
+                    <p style="font-size:.7rem; color:#adb5bd; font-weight:600; text-transform:uppercase; margin-bottom:.15rem;">Total Semua Item</p>
+                    <p style="font-size:.85rem; font-weight:600; color:#7b809a; margin:0 0 .35rem;">Rp {{ number_format($totalAllSA, 0, ',', '.') }}</p>
+                    <p style="font-size:.7rem; color:#adb5bd; font-weight:600; text-transform:uppercase; margin-bottom:.15rem;">Ditolak Kaprodi</p>
+                    <p style="font-size:.85rem; font-weight:700; color:#dc2626; margin:0;">- Rp {{ number_format($totalRejectedSA, 0, ',', '.') }}</p>
                 </div>
+                @endif
             </div>
             @endif
 

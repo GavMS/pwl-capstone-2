@@ -219,6 +219,13 @@
 }
 .btn-icon-edit:hover { box-shadow: 0 6px 15px -3px rgba(33,82,255,.5); color: #fff; }
 
+.btn-icon-submit {
+    background: linear-gradient(310deg, #7928ca, #ff007f);
+    color: #fff;
+    box-shadow: 0 3px 5px -1px rgba(121,40,202,.35);
+}
+.btn-icon-submit:hover { box-shadow: 0 6px 15px -3px rgba(121,40,202,.5); color: #fff; }
+
 .btn-icon-delete {
     background: linear-gradient(310deg, #ea0606, #ff667c);
     color: #fff;
@@ -266,110 +273,13 @@
     color: #adb5bd;
     font-size: .875rem;
 }
-
-/* ─── Delete Modal ────────────────────────────────── */
-.modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(52, 71, 103, 0.45);
-    backdrop-filter: blur(2px);
-    z-index: 9999;
-    align-items: center;
-    justify-content: center;
-}
-.modal-overlay.active { display: flex; }
-.modal-box {
-    background: #fff;
-    border-radius: 1rem;
-    padding: 2rem;
-    width: 100%;
-    max-width: 420px;
-    margin: 1rem;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,.25);
-    animation: modalIn .2s ease;
-}
-@keyframes modalIn {
-    from { opacity: 0; transform: scale(.95) translateY(8px); }
-    to   { opacity: 1; transform: scale(1)  translateY(0); }
-}
-.modal-icon {
-    width: 56px; height: 56px;
-    border-radius: 50%;
-    background: #fef2f2;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 1rem;
-    font-size: 1.5rem;
-    color: #dc2626;
-}
-.modal-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #344767;
-    text-align: center;
-    margin-bottom: .5rem;
-}
-.modal-text {
-    font-size: .875rem;
-    color: #7b809a;
-    text-align: center;
-    margin-bottom: 1.5rem;
-}
-.modal-draft-name {
-    font-weight: 700;
-    color: #344767;
-}
-.modal-actions {
-    display: flex;
-    gap: .75rem;
-    justify-content: center;
-}
-.btn-modal-cancel {
-    padding: .6rem 1.5rem;
-    font-size: .8125rem; font-weight: 600;
-    color: #7b809a; background: #f0f2f5;
-    border: none; border-radius: .5rem; cursor: pointer;
-    transition: background .15s;
-}
-.btn-modal-cancel:hover { background: #e2e8f0; }
-.btn-modal-confirm {
-    padding: .6rem 1.5rem;
-    font-size: .8125rem; font-weight: 600;
-    color: #fff;
-    background: linear-gradient(310deg, #ea0606, #ff667c);
-    border: none; border-radius: .5rem; cursor: pointer;
-    box-shadow: 0 3px 8px -2px rgba(234,6,6,.4);
-    transition: transform .15s, box-shadow .15s;
-}
-.btn-modal-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 15px -3px rgba(234,6,6,.5); }
 </style>
 
-{{-- ─── Delete Confirmation Modal ─── --}}
-<div class="modal-overlay" id="deleteModal">
-    <div class="modal-box">
-        <div class="modal-icon">
-            <i class="fas fa-trash-alt"></i>
-        </div>
-        <h4 class="modal-title">Hapus Draf Pengadaan?</h4>
-        <p class="modal-text">
-            Anda akan menghapus draf:<br>
-            <span class="modal-draft-name" id="modalDraftName">—</span><br>
-            <span style="color:#ea0606; font-size:.8rem;">Tindakan ini tidak dapat dibatalkan.</span>
-        </p>
-        <div class="modal-actions">
-            <button class="btn-modal-cancel" onclick="closeDeleteModal()">
-                <i class="fas fa-times mr-1"></i> Batal
-            </button>
-            <form id="deleteForm" method="POST" style="margin:0;">
-                @csrf
-                @method('DELETE')
-                <button type="submit" class="btn-modal-confirm">
-                    <i class="fas fa-trash-alt mr-1"></i> Ya, Hapus
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
+{{-- ─── Hidden Forms for SweetAlert ─── --}}
+<form id="actionForm" method="POST" style="display: none;">
+    @csrf
+    <input type="hidden" name="_method" id="actionMethod" value="POST">
+</form>
 
 <div class="flex flex-wrap -mx-3">
 
@@ -495,6 +405,14 @@
                                     </a>
 
                                     @if(($d['status'] ?? 'draft') === 'draft')
+                                    {{-- Tombol Ajukan --}}
+                                    <button type="button"
+                                            class="btn-icon btn-icon-submit"
+                                            data-tooltip="Ajukan"
+                                            onclick="confirmSubmit('{{ addslashes($d['title']) }}', '{{ route('kalab.procurement.submit', $d['id']) }}')">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+
                                     {{-- Tombol Edit --}}
                                     <a href="{{ route('kalab.procurement.edit', $d['id']) }}"
                                        class="btn-icon btn-icon-edit"
@@ -506,7 +424,7 @@
                                     <button type="button"
                                             class="btn-icon btn-icon-delete"
                                             data-tooltip="Hapus"
-                                            onclick="openDeleteModal('{{ $d['id'] }}', '{{ addslashes($d['title']) }}', '{{ route('kalab.procurement.destroy', $d['id']) }}')">
+                                            onclick="confirmDelete('{{ addslashes($d['title']) }}', '{{ route('kalab.procurement.destroy', $d['id']) }}')">
                                         <i class="fas fa-trash-alt"></i>
                                     </button>
                                     @endif
@@ -588,25 +506,54 @@ function applyFilter() {
 searchInput.addEventListener('input', applyFilter);
 statusFilter.addEventListener('change', applyFilter);
 
-// ── Delete Modal ──────────────────────────────────────────────
-function openDeleteModal(id, name, actionUrl) {
-    document.getElementById('modalDraftName').textContent = name;
-    document.getElementById('deleteForm').action = actionUrl;
-    document.getElementById('deleteModal').classList.add('active');
+// ── SweetAlert Actions ─────────────────────────────────────────
+function submitAction(url, method) {
+    const form = document.getElementById('actionForm');
+    form.action = url;
+    document.getElementById('actionMethod').value = method;
+    form.submit();
 }
 
-function closeDeleteModal() {
-    document.getElementById('deleteModal').classList.remove('active');
+function confirmSubmit(title, url) {
+    Swal.fire({
+        title: 'Ajukan Draf?',
+        html: `Anda akan mengajukan draf:<br><strong style="color:#344767;">${title}</strong><br><br><span style="font-size:0.85rem; color:#7b809a;">Setelah diajukan, draf ini akan dikunci dan dikirim ke Kaprodi untuk di-review.</span>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-paper-plane mr-1"></i> Ya, Ajukan',
+        cancelButtonText: '<i class="fas fa-times mr-1"></i> Batal',
+        customClass: {
+            popup: 'swal-custom-popup',
+            confirmButton: 'swal-btn-confirm',
+            cancelButton: 'swal-btn-cancel'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitAction(url, 'PATCH');
+        }
+    });
 }
 
-// Tutup modal jika klik di luar box
-document.getElementById('deleteModal').addEventListener('click', function(e) {
-    if (e.target === this) closeDeleteModal();
-});
-
-// Tutup modal dengan Escape
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeDeleteModal();
-});
+function confirmDelete(title, url) {
+    Swal.fire({
+        title: 'Hapus Draf?',
+        html: `Anda akan menghapus draf:<br><strong style="color:#344767;">${title}</strong><br><br><span style="font-size:0.85rem; color:#ea0606;">Tindakan ini tidak dapat dibatalkan.</span>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-trash-alt mr-1"></i> Ya, Hapus',
+        cancelButtonText: '<i class="fas fa-times mr-1"></i> Batal',
+        customClass: {
+            popup: 'swal-custom-popup',
+            confirmButton: 'swal-btn-danger',
+            cancelButton: 'swal-btn-cancel'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            submitAction(url, 'DELETE');
+        }
+    });
+}
 </script>
 @endsection

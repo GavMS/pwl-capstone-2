@@ -10,6 +10,9 @@
     $rejected  = collect($items)->filter(fn($i) => ($i['review_status'] ?? 'pending') === 'rejected')->count();
     $pending   = collect($items)->filter(fn($i) => ($i['review_status'] ?? 'pending') === 'pending')->count();
     $totalItems = count($items);
+    $totalAll      = collect($items)->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1));
+    $totalApproved = collect($items)->filter(fn($i) => ($i['review_status'] ?? 'pending') !== 'rejected')->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1));
+    $totalRejected = collect($items)->filter(fn($i) => ($i['review_status'] ?? 'pending') === 'rejected')->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1));
 @endphp
 
 <style>
@@ -301,17 +304,19 @@
                 <div>
                     <p style="font-size:.7rem;color:#7b809a;font-weight:700;text-transform:uppercase;margin-bottom:.2rem;">Total Seluruh Anggaran</p>
                     <p style="font-size:1.35rem;font-weight:800;color:#7928ca;margin:0;">
-                        Rp {{ number_format(collect($items)->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1)), 0, ',', '.') }}
+                        Rp {{ number_format($totalAll, 0, ',', '.') }}
                     </p>
                 </div>
-                @if(!$isLocked)
                 <div style="text-align:right;">
+                    @if($totalRejected > 0)
+                    <p style="font-size:.7rem;color:#adb5bd;font-weight:600;text-transform:uppercase;margin-bottom:.15rem;">Ditolak</p>
+                    <p style="font-size:.85rem;font-weight:700;color:#dc2626;margin:0 0 .5rem;">- Rp {{ number_format($totalRejected, 0, ',', '.') }}</p>
+                    @endif
                     <p style="font-size:.7rem;color:#adb5bd;font-weight:600;text-transform:uppercase;margin-bottom:.25rem;">Anggaran Disetujui</p>
-                    <p style="font-size:1rem;font-weight:700;color:#15803d;margin:0;">
-                        Rp {{ number_format(collect($items)->filter(fn($i) => ($i['review_status'] ?? 'pending') !== 'rejected')->sum(fn($i) => ($i['price'] ?? 0) * ($i['quantity'] ?? 1)), 0, ',', '.') }}
+                    <p style="font-size:1.15rem;font-weight:800;color:#15803d;margin:0;">
+                        Rp {{ number_format($totalApproved, 0, ',', '.') }}
                     </p>
                 </div>
-                @endif
             </div>
             @endif
 
@@ -345,10 +350,9 @@
             <a href="{{ route('kaprodi.procurement.index') }}" class="btn-back-form">
                 <i class="fas fa-arrow-left"></i> Kembali ke Daftar
             </a>
-            <form action="{{ route('kaprodi.procurement.finalize', $draft['id']) }}" method="POST" style="margin:0;"
-                  onsubmit="return confirm('Yakin ingin MEMFINALISASI draf ini?\n\n• Draf akan dikunci permanen\n• Item belum diputuskan ({{ $pending }}) otomatis disetujui\n• Tindakan ini tidak dapat dibatalkan')">
+            <form action="{{ route('kaprodi.procurement.finalize', $draft['id']) }}" method="POST" style="margin:0;" id="finalizeForm">
                 @csrf
-                <button type="submit" class="btn-finalize">
+                <button type="button" class="btn-finalize" id="btnFinalize">
                     <i class="fas fa-lock"></i> Finalisasi Draf
                 </button>
             </form>
@@ -364,4 +368,41 @@
 
 </div>
 </div>
+
+@section('scripts')
+<script>
+document.getElementById('btnFinalize')?.addEventListener('click', function () {
+    Swal.fire({
+        title: 'Finalisasi Draf?',
+        html: `
+            <div style="text-align:left; line-height:1.7;">
+                <p style="margin:0 0 .5rem; font-weight:600; color:#7928ca;">Perhatian sebelum melanjutkan:</p>
+                <ul style="padding-left:1.25rem; margin:0;">
+                    <li style="margin-bottom:.25rem; color:#7b809a;">Draf akan <strong>dikunci permanen</strong></li>
+                    <li style="margin-bottom:.25rem; color:#7b809a;">Item belum diputuskan <strong>({{ $pending }})</strong> otomatis disetujui</li>
+                    <li style="color:#7b809a;">Tindakan ini <strong>tidak dapat dibatalkan</strong></li>
+                </ul>
+            </div>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-lock"></i>&nbsp; Ya, Finalisasi!',
+        cancelButtonText: '<i class="fas fa-times"></i>&nbsp; Batal',
+        buttonsStyling: false,
+        reverseButtons: false,
+        focusCancel: true,
+        customClass: {
+            popup: 'swal-custom-popup',
+            title: 'swal-custom-title',
+            htmlContainer: 'swal-custom-html',
+            confirmButton: 'swal-btn-confirm',
+            cancelButton: 'swal-btn-cancel',
+        }
+    }).then(function (result) {
+        if (result.isConfirmed) {
+            document.getElementById('finalizeForm').submit();
+        }
+    });
+});
+</script>
+@endsection
 @endsection

@@ -754,7 +754,26 @@ async function submitBhpForm(e) {
 
 // ── Delete BHP ─────────────────────────────────────
 async function deleteBhp(id, name) {
-    if (!confirm(`Hapus BHP "${name}"? Tindakan ini tidak dapat dibatalkan.`)) return;
+    const result = await Swal.fire({
+        title: 'Hapus BHP?',
+        html: `Anda akan menghapus BHP <strong>"${name}"</strong>.<br><span style="color:#c62828; font-size:.875rem;">Tindakan ini tidak dapat dibatalkan.</span>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: '<i class="fas fa-trash"></i>&nbsp; Ya, Hapus!',
+        cancelButtonText: '<i class="fas fa-times"></i>&nbsp; Batal',
+        buttonsStyling: false,
+        reverseButtons: false,
+        focusCancel: true,
+        customClass: {
+            popup: 'swal-custom-popup',
+            title: 'swal-custom-title',
+            htmlContainer: 'swal-custom-html',
+            confirmButton: 'swal-btn-confirm swal-btn-danger',
+            cancelButton: 'swal-btn-cancel',
+        }
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
         const resp = await fetch(`${API_URL}/api/consumables/${id}`, {

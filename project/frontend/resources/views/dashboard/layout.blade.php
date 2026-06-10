@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@yield('title', 'Dashboard') - AsetLab</title>
     <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
+    {{-- SweetAlert2 --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" />
     {{-- Font Awesome 6 — pakai cdnjs (lebih reliable dibanding kit) --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" referrerpolicy="no-referrer" />
     <link href="{{ asset('assets/css/nucleo-icons.css') }}" rel="stylesheet" />
@@ -77,6 +79,60 @@
         }
 
         footer .text-slate-500 { color: #94a3b8 !important; }
+
+        /* ── SweetAlert2 Customization (Soft, Rounded & Uniform) ────────────── */
+        .swal-custom-popup {
+            font-family: 'Open Sans', sans-serif !important;
+            border-radius: 1.5rem !important; /* Ujung lebih tumpul */
+            padding: 2rem !important;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
+            border: none !important;
+        }
+        .swal-custom-title {
+            font-weight: 700 !important;
+            color: #344767 !important;
+            font-size: 1.35rem !important;
+        }
+        .swal-custom-html {
+            color: #7b809a !important;
+            font-size: 0.95rem !important;
+        }
+        .swal-btn-confirm {
+            background: linear-gradient(310deg, #7928ca, #ff007f) !important;
+            color: #fff !important;
+            border: none !important;
+            border-radius: 0.75rem !important; /* Tombol tumpul */
+            font-weight: 600 !important;
+            padding: 0.75rem 1.75rem !important;
+            margin: 0 0.5rem !important;
+            cursor: pointer;
+            box-shadow: 0 4px 7px -1px rgba(121, 40, 202, 0.4) !important;
+            transition: all 0.2s ease;
+        }
+        .swal-btn-confirm:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        .swal-btn-danger {
+            background: linear-gradient(310deg, #f53939, #fbcf33) !important;
+            box-shadow: 0 4px 7px -1px rgba(245, 57, 57, 0.4) !important;
+        }
+        .swal-btn-cancel {
+            background: #f0f2f5 !important;
+            color: #7b809a !important;
+            border: none !important;
+            border-radius: 0.75rem !important; /* Tombol tumpul */
+            font-weight: 600 !important;
+            padding: 0.75rem 1.75rem !important;
+            margin: 0 0.5rem !important;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .swal-btn-cancel:hover {
+            background: #e2e8f0 !important;
+            color: #344767 !important;
+        }
+
     </style>
 </head>
 
@@ -313,4 +369,6 @@
 <script src="{{ asset('assets/js/plugins/perfect-scrollbar.min.js') }}" async></script>
 <script async defer src="https://buttons.github.io/buttons.js"></script>
 <script src="{{ asset('assets/js/soft-ui-dashboard-tailwind.js?v=1.0.5') }}" async></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@yield('scripts')
 </html>

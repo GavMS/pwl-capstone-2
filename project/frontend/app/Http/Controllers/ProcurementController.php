@@ -54,13 +54,15 @@ class ProcurementController extends Controller
     // ─────────────────────────────────────────────
     public function create()
     {
-        $assets = $this->fetchAssets();
+        $assets      = $this->fetchAssets();
+        $consumables = $this->fetchConsumables();
 
         return view('kalab.procurement.form', [
-            'user'      => Session::get('user', []),
-            'assets'    => $assets,
-            'editDraft' => null,
-            'items'     => [],
+            'user'        => Session::get('user', []),
+            'assets'      => $assets,
+            'consumables' => $consumables,
+            'editDraft'   => null,
+            'items'       => [],
         ]);
     }
 
@@ -132,7 +134,8 @@ class ProcurementController extends Controller
     // ─────────────────────────────────────────────
     public function edit($id)
     {
-        $assets = $this->fetchAssets();
+        $assets      = $this->fetchAssets();
+        $consumables = $this->fetchConsumables();
 
         try {
             $response = Http::withHeaders($this->authHeaders())
@@ -152,10 +155,11 @@ class ProcurementController extends Controller
         }
 
         return view('kalab.procurement.form', [
-            'user'      => Session::get('user', []),
-            'assets'    => $assets,
-            'editDraft' => $editDraft,
-            'items'     => $items,
+            'user'        => Session::get('user', []),
+            'assets'      => $assets,
+            'consumables' => $consumables,
+            'editDraft'   => $editDraft,
+            'items'       => $items,
         ]);
     }
 
@@ -216,7 +220,31 @@ class ProcurementController extends Controller
     }
 
     // ─────────────────────────────────────────────
-    // Helper: Ambil daftar aset dari backend untuk dropdown penggantian
+    // PATCH /kalab/procurement/{id}/submit — Ajukan Draf Langsung
+    // ─────────────────────────────────────────────
+    public function submit($id)
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->patch("{$this->apiUrl()}/api/procurement/{$id}/status", [
+                    'status' => 'submitted'
+                ]);
+
+            if ($response->successful()) {
+                return redirect()->route('kalab.procurement.index')
+                    ->with('success', 'Draf pengadaan berhasil diajukan.');
+            }
+
+            return redirect()->route('kalab.procurement.index')
+                ->withErrors(['api' => $response->json()['message'] ?? 'Gagal mengajukan draf pengadaan.']);
+        } catch (\Exception $e) {
+            return redirect()->route('kalab.procurement.index')
+                ->withErrors(['api' => 'Tidak dapat terhubung ke server backend.']);
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Helper: Ambil daftar inventaris dari backend
     // ─────────────────────────────────────────────
     private function fetchAssets(): array
     {
@@ -224,6 +252,20 @@ class ProcurementController extends Controller
             $response = Http::withHeaders($this->authHeaders())
                 ->get("{$this->apiUrl()}/api/procurement/assets/list");
             return $response->successful() ? ($response->json()['assets'] ?? []) : [];
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Helper: Ambil daftar BHP dari backend
+    // ─────────────────────────────────────────────
+    private function fetchConsumables(): array
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->get("{$this->apiUrl()}/api/consumables");
+            return $response->successful() ? ($response->json()['consumables'] ?? $response->json() ?? []) : [];
         } catch (\Exception $e) {
             return [];
         }
