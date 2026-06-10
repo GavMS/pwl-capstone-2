@@ -74,6 +74,7 @@ async function run() {
             role_id    BIGINT NULL,
             roles_id   BIGINT NULL,
             room_id    BIGINT NULL,
+            is_active  TINYINT(1) NOT NULL DEFAULT 1,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE SET NULL
@@ -92,6 +93,10 @@ async function run() {
             price       DECIMAL(15,2) NULL DEFAULT 0,
             description TEXT NULL,
             status      VARCHAR(100) NULL DEFAULT 'Baik',
+            label_number   VARCHAR(255) NULL UNIQUE,
+            qr_path        VARCHAR(500) NULL,
+            received_date  DATE NULL,
+            source_item_id BIGINT NULL,
             created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL
@@ -141,11 +146,19 @@ async function run() {
             purchase_link      TEXT NULL,
             replaced_asset_id  BIGINT NULL,
             notes              TEXT NULL,
+            review_status      VARCHAR(50) NOT NULL DEFAULT 'pending',
             created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (draft_id)          REFERENCES procurement_drafts(id) ON DELETE CASCADE,
             FOREIGN KEY (replaced_asset_id) REFERENCES assets(id) ON DELETE SET NULL
         )
+    `);
+
+    // FK assets.source_item_id → procurement_items (ditambah setelah tabelnya ada)
+    await db.query(`
+        ALTER TABLE assets
+        ADD CONSTRAINT fk_assets_source_item
+        FOREIGN KEY (source_item_id) REFERENCES procurement_items(id) ON DELETE SET NULL
     `);
 
     await db.query(`
@@ -221,14 +234,15 @@ async function run() {
         { name: 'Mewati Ayub, S.Kom., M.T.', email: 'kaprodi@example.com',role: 'Ketua Program Studi' },
         { name: 'Staf Administrasi',      email: 'stafadmin@example.com', role: 'Staf Administrasi' },
         { name: 'Staf Laboratorium',      email: 'staflab@example.com',   role: 'Staf Laboratorium' },
+        { name: 'Staf Nonaktif',          email: 'nonaktif@example.com',  role: 'Staf Laboratorium', active: 0 },
     ];
     for (const u of users) {
         const rid = roleMap[u.role];
         await db.query(
-            'INSERT INTO users (name, email, password, role_id, roles_id) VALUES (?, ?, ?, ?, ?)',
-            [u.name, u.email, hashedPwd, rid, rid]
+            'INSERT INTO users (name, email, password, role_id, roles_id, is_active) VALUES (?, ?, ?, ?, ?, ?)',
+            [u.name, u.email, hashedPwd, rid, rid, u.active ?? 1]
         );
-        console.log(`  → ${u.email}  /  password123`);
+        console.log(`  → ${u.email}  /  password123${u.active === 0 ? '  (NONAKTIF — untuk uji login ditolak)' : ''}`);
     }
     const [userRows] = await db.query('SELECT * FROM users');
     const userMap   = Object.fromEntries(userRows.map(u => [u.email, u.id]));
@@ -242,6 +256,7 @@ async function run() {
         { name: 'Switch Cisco Catalyst 2960',    code: 'IT/SW/22/001', category: 'Jaringan',  room: 'LAB-JAR-01', cond: 'Perlu Maintenance', year: 2022, price: 12000000 },
         { name: 'Router MikroTik CCR1009',       code: 'IT/RT/23/001', category: 'Jaringan',  room: 'LAB-JAR-01', cond: 'Baik',              year: 2023, price: 8500000 },
         { name: 'Server HP ProLiant DL380',      code: 'IT/SRV/21/001',category: 'Server',    room: 'SRV-01',     cond: 'Baik',              year: 2021, price: 120000000 },
+        { name: 'Proyektor Epson EB-S41 (lama)', code: 'IT/PRJ/20/001',category: 'Proyektor', room: 'LAB-KOM-01', cond: 'Diganti',           year: 2020, price: 6500000 },
     ];
     for (const a of assets) {
         await db.query(
@@ -282,6 +297,7 @@ async function run() {
     const items1 = [
         { type: 'inventaris', name: 'Switch Cisco Catalyst 2960', price: 12000000, qty: 2, link: 'https://www.bhinneka.com/cisco-catalyst-2960', replaced: assetMap['IT/SW/22/001'] },
         { type: 'bhp',        name: 'Kabel UTP Cat6 Belden',      price: 1850000,  qty: 4, link: 'https://www.bhinneka.com/belden-cat6',       replaced: null },
+        { type: 'inventaris', name: 'Webcam Logitech C920',       price: 1250000,  qty: 3, link: 'https://www.tokopedia.com/logitech-c920',    replaced: null }, // kandidat utk DITOLAK kaprodi saat uji Langkah 2
     ];
     for (const it of items1) {
         await db.query(
@@ -311,6 +327,86 @@ async function run() {
         );
     }
     console.log(`  ✓ Draft 2 "Pengadaan Lab Komputer 2026" (draft) — ${items2.length} items`);
+
+    // Draf 3: SUDAH difinalisasi Kaprodi (approved) — aset hasil pengadaan
+    // sudah termaterialisasi dalam berbagai kondisi labeling, agar halaman
+    // Staf Admin > Inventaris langsung berisi data setelah seed.
+    const [dr3] = await db.query(
+        `INSERT INTO procurement_drafts (title, year, status, created_by, created_at)
+         VALUES (?, ?, ?, ?, ?)`,
+        ['Pengadaan Lab Komputer 2024 (Selesai)', 2024, 'approved', kalabId, '2024-03-01 10:00:00']
+    );
+    const draftId3 = dr3.insertId;
+
+    // item draf 3 + state aset hasil materialisasinya:
+    //   asset: null            → item bhp / rejected (tidak jadi aset)
+    //   asset: {}              → aset baru polos (belum dilabel — kasus utama uji Langkah 3)
+    //   asset: { label }       → sudah dilabel, belum diterima
+    //   asset: { label, recv } → sudah dilabel + diterima (status "Diterima")
+    const items3 = [
+        { type: 'inventaris', name: 'Access Point Ubiquiti UniFi U6', price: 2800000, qty: 1, review: 'approved',
+          link: 'https://www.bhinneka.com/ubiquiti-u6', replaced: null,
+          asset: { label: 'INV/2024/001', recv: '2024-06-10', qr: true } },
+        { type: 'inventaris', name: 'Monitor LG 24MK600', price: 1900000, qty: 2, review: 'approved',
+          link: 'https://www.tokopedia.com/lg-24mk600', replaced: null,
+          asset: { label: 'INV/2024/002' } },
+        { type: 'inventaris', name: 'Printer HP LaserJet M404dn', price: 5200000, qty: 1, review: 'approved',
+          link: 'https://www.bhinneka.com/hp-m404dn', replaced: null,
+          asset: {} },
+        { type: 'inventaris', name: 'Proyektor Epson EB-X06', price: 7400000, qty: 1, review: 'approved',
+          link: 'https://www.bhinneka.com/epson-eb-x06', replaced: assetMap['IT/PRJ/20/001'],
+          asset: { label: 'INV/2024/003', recv: '2024-07-02' } }, // aset lama IT/PRJ/20/001 sudah berstatus "Diganti"
+        { type: 'inventaris', name: 'Scanner Epson DS-530', price: 6100000, qty: 1, review: 'rejected',
+          link: 'https://www.bhinneka.com/epson-ds530', replaced: null, asset: null }, // ditolak → tidak jadi aset
+        { type: 'bhp', name: 'Konektor RJ45 CommScope', price: 350000, qty: 3, review: 'approved',
+          link: 'https://www.tokopedia.com/rj45-commscope', replaced: null, asset: null }, // BHP → tidak jadi aset
+    ];
+
+    for (const it of items3) {
+        const [itemRes] = await db.query(
+            `INSERT INTO procurement_items (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id, review_status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [draftId3, it.type, it.name, it.price, it.qty, it.link, it.replaced, it.review]
+        );
+
+        if (it.asset) {
+            const [assetRes] = await db.query(
+                `INSERT INTO assets (name, condition_status, year, price, status, source_item_id, label_number, received_date)
+                 VALUES (?, 'Baik', ?, ?, 'Baik', ?, ?, ?)`,
+                [it.name, 2024, it.price, itemRes.insertId, it.asset.label || null, it.asset.recv || null]
+            );
+
+            // QR placeholder: tulis PNG kecil ke storage publik Laravel agar kolom QR terisi
+            if (it.asset.qr) {
+                const qrDir  = path.resolve(__dirname, '../frontend/storage/app/public/qr');
+                const qrFile = `asset-${assetRes.insertId}.png`;
+                try {
+                    fs.mkdirSync(qrDir, { recursive: true });
+                    fs.writeFileSync(
+                        path.join(qrDir, qrFile),
+                        Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
+                    );
+                    await db.query('UPDATE assets SET qr_path = ? WHERE id = ?', [`/storage/qr/${qrFile}`, assetRes.insertId]);
+                } catch (e) {
+                    console.log(`  ⚠ Gagal menulis QR placeholder (${e.message}) — qr_path dibiarkan NULL.`);
+                }
+            }
+        }
+    }
+    console.log(`  ✓ Draft 3 "Pengadaan Lab Komputer 2024" (approved/final) — ${items3.length} items, aset termaterialisasi dgn variasi label/QR/tgl terima`);
+
+    // Draf 4: DITOLAK kaprodi — variasi status utk daftar & statistik
+    const [dr4] = await db.query(
+        `INSERT INTO procurement_drafts (title, year, status, created_by, created_at)
+         VALUES (?, ?, ?, ?, ?)`,
+        ['Pengadaan Perangkat Multimedia 2024', 2024, 'rejected', kalabId, '2024-05-15 14:00:00']
+    );
+    await db.query(
+        `INSERT INTO procurement_items (draft_id, item_type, name, price, quantity, purchase_link, review_status)
+         VALUES (?, 'inventaris', 'Drone DJI Mini 4 Pro', 13500000, 1, 'https://www.tokopedia.com/dji-mini-4-pro', 'rejected')`,
+        [dr4.insertId]
+    );
+    console.log('  ✓ Draft 4 "Pengadaan Perangkat Multimedia 2024" (rejected) — 1 item');
 
     // ── SEED: MAINTENANCE LOGS ──────────────────────────────
     console.log('🌱 Seeding maintenance logs...');
