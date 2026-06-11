@@ -58,8 +58,7 @@ npm start
 
 **RESET DB:***
 ```
-npm run seed
-npm run reset
+node reset-and-seed.js
 ```
 
 **Terminal 2:**
