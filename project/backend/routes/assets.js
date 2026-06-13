@@ -8,7 +8,10 @@ router.get('/procurement', authMiddleware, assetController.getProcurementAssets)
 
 router.get('/', authMiddleware, assetController.getAllAssets);
 
-// Update label / QR / tanggal terima (Staf Admin)
+// Bulk update received_date semua unit dari satu procurement item
+router.patch('/by-source/:sourceId/received', authMiddleware, assetController.setReceivedBySource);
+
+// Update label / QR / tanggal terima per-aset (Staf Admin)
 router.patch('/:id', authMiddleware, assetController.updateAsset);
 
 module.exports = router;

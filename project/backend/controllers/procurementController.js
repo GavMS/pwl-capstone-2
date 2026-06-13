@@ -293,29 +293,37 @@ exports.finalizeDraft = async (req, res) => {
             [id]
         );
 
-        // ── Materialisasi inventaris: tiap item 'inventaris' yang disetujui → 1 baris aset nyata ──
-        // (per-baris item; BHP dilewati; idempotent via assets.source_item_id)
+        // ── Materialisasi inventaris: tiap item 'inventaris' yang disetujui → baris aset nyata sebanyak quantity ──
+        // (per-barang, BHP dilewati, idempotent via assets.source_item_id)
         const [approvedInvItems] = await connection.query(
-            `SELECT pi.id, pi.name, pi.price
+            `SELECT pi.id, pi.name, pi.price, pi.quantity
              FROM procurement_items pi
              WHERE pi.draft_id = ?
                AND pi.item_type = 'inventaris'
-               AND pi.review_status = 'approved'
-               AND NOT EXISTS (SELECT 1 FROM assets a WHERE a.source_item_id = pi.id)`,
+               AND pi.review_status = 'approved'`,
             [id]
         );
+        let assetsCreatedCount = 0;
         for (const item of approvedInvItems) {
-            await connection.query(
-                `INSERT INTO assets (name, condition_status, year, price, status, source_item_id, received_date)
-                 VALUES (?, 'Baik', ?, ?, 'Baik', ?, NULL)`,
-                [item.name, drafts[0].year, item.price || 0, item.id]
+            const [[countRow]] = await connection.query(
+                `SELECT COUNT(*) AS existing_count FROM assets WHERE source_item_id = ?`,
+                [item.id]
             );
+            const needed = (item.quantity || 1) - (countRow.existing_count || 0);
+            for (let k = 0; k < needed; k++) {
+                await connection.query(
+                    `INSERT INTO assets (name, condition_status, year, price, status, source_item_id, received_date)
+                     VALUES (?, 'Baik', ?, ?, 'Baik', ?, NULL)`,
+                    [item.name, drafts[0].year, item.price || 0, item.id]
+                );
+                assetsCreatedCount++;
+            }
         }
 
         await connection.commit();
         res.json({
             message: 'Draf berhasil difinalisasi. Item yang belum diputuskan otomatis disetujui.',
-            assets_created: approvedInvItems.length
+            assets_created: assetsCreatedCount
         });
     } catch (error) {
         await connection.rollback();

@@ -95,6 +95,7 @@ async function run() {
             status      VARCHAR(100) NULL DEFAULT 'Baik',
             label_number   VARCHAR(255) NULL UNIQUE,
             qr_path        VARCHAR(500) NULL,
+            univ_qr_path   VARCHAR(500) NULL,
             received_date  DATE NULL,
             source_item_id BIGINT NULL,
             created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -349,7 +350,7 @@ async function run() {
           asset: { label: 'INV/2024/001', recv: '2024-06-10', qr: true } },
         { type: 'inventaris', name: 'Monitor LG 24MK600', price: 1900000, qty: 2, review: 'approved',
           link: 'https://www.tokopedia.com/lg-24mk600', replaced: null,
-          asset: { label: 'INV/2024/002' } },
+          asset: {} },
         { type: 'inventaris', name: 'Printer HP LaserJet M404dn', price: 5200000, qty: 1, review: 'approved',
           link: 'https://www.bhinneka.com/hp-m404dn', replaced: null,
           asset: {} },
@@ -370,25 +371,29 @@ async function run() {
         );
 
         if (it.asset) {
-            const [assetRes] = await db.query(
-                `INSERT INTO assets (name, condition_status, year, price, status, source_item_id, label_number, received_date)
-                 VALUES (?, 'Baik', ?, ?, 'Baik', ?, ?, ?)`,
-                [it.name, 2024, it.price, itemRes.insertId, it.asset.label || null, it.asset.recv || null]
-            );
+            const quantity = it.qty || 1;
+            for (let q = 0; q < quantity; q++) {
+                const initialLabel = it.asset.label ? (quantity > 1 ? `${it.asset.label}/${q+1}` : it.asset.label) : null;
+                const [assetRes] = await db.query(
+                    `INSERT INTO assets (name, condition_status, year, price, status, source_item_id, label_number, received_date)
+                     VALUES (?, 'Baik', ?, ?, 'Baik', ?, ?, ?)`,
+                    [it.name, 2024, it.price, itemRes.insertId, initialLabel, it.asset.recv || null]
+                );
 
-            // QR placeholder: tulis PNG kecil ke storage publik Laravel agar kolom QR terisi
-            if (it.asset.qr) {
-                const qrDir  = path.resolve(__dirname, '../frontend/storage/app/public/qr');
-                const qrFile = `asset-${assetRes.insertId}.png`;
-                try {
-                    fs.mkdirSync(qrDir, { recursive: true });
-                    fs.writeFileSync(
-                        path.join(qrDir, qrFile),
-                        Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
-                    );
-                    await db.query('UPDATE assets SET qr_path = ? WHERE id = ?', [`/storage/qr/${qrFile}`, assetRes.insertId]);
-                } catch (e) {
-                    console.log(`  ⚠ Gagal menulis QR placeholder (${e.message}) — qr_path dibiarkan NULL.`);
+                // QR placeholder: tulis PNG kecil ke storage publik Laravel agar kolom QR terisi
+                if (it.asset.qr) {
+                    const qrDir  = path.resolve(__dirname, '../frontend/storage/app/public/qr');
+                    const qrFile = `asset-${assetRes.insertId}.png`;
+                    try {
+                        fs.mkdirSync(qrDir, { recursive: true });
+                        fs.writeFileSync(
+                            path.join(qrDir, qrFile),
+                            Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==', 'base64')
+                        );
+                        await db.query('UPDATE assets SET qr_path = ? WHERE id = ?', [`/storage/qr/${qrFile}`, assetRes.insertId]);
+                    } catch (e) {
+                        console.log(`  ⚠ Gagal menulis QR placeholder (${e.message}) — qr_path dibiarkan NULL.`);
+                    }
                 }
             }
         }

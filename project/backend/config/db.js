@@ -274,6 +274,16 @@ const testConnection = async () => {
             console.log('Added qr_path column to assets table.');
         }
 
+        // assets.univ_qr_path — path file PNG QR universitas
+        const [univQrCols] = await connection.query(`
+            SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'assets' AND COLUMN_NAME = 'univ_qr_path'
+        `);
+        if (univQrCols.length === 0) {
+            await connection.query(`ALTER TABLE assets ADD COLUMN univ_qr_path VARCHAR(500) NULL`);
+            console.log('Added univ_qr_path column to assets table.');
+        }
+
         // assets.received_date — tanggal penerimaan (NULL = belum diterima / menunggu penerimaan)
         const [recvCols] = await connection.query(`
             SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
