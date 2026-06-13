@@ -67,6 +67,7 @@ Route::prefix('kalab')->middleware('role:Kepala Laboratorium')->group(function (
     // Inventaris & BHP
     Route::get('/inventaris',               [InventoryController::class, 'assets'])->name('kalab.inventaris.index');
     Route::get('/bhp',                      [InventoryController::class, 'consumables'])->name('kalab.bhp.index');
+    Route::patch('/bhp/{id}',               [InventoryController::class, 'updateBhp'])->name('kalab.bhp.update');
 });
 
 // ─────────────────────────────────────────────
@@ -86,8 +87,9 @@ Route::prefix('kaprodi')->middleware('role:Ketua Program Studi')->group(function
 Route::prefix('stafadmin')->middleware('role:Staf Administrasi')->group(function () {
     Route::get('/procurement',        [StafAdminController::class, 'index'])->name('stafadmin.procurement.index');
     Route::get('/procurement/{id}',   [StafAdminController::class, 'show'])->name('stafadmin.procurement.show');
-    Route::get('/inventaris',         [StafAdminController::class, 'inventaris'])->name('stafadmin.inventaris.index');
-    Route::post('/inventaris/{id}/label', [StafAdminController::class, 'saveLabel'])->name('stafadmin.inventaris.label');
+    Route::get('/inventaris',                                       [StafAdminController::class, 'inventaris'])->name('stafadmin.inventaris.index');
+    Route::post('/inventaris/bulk-label',                           [StafAdminController::class, 'bulkSaveLabels'])->name('stafadmin.inventaris.bulkLabel');
+    Route::post('/inventaris/procurement-item/{sourceId}/received', [StafAdminController::class, 'setReceivedDate'])->name('stafadmin.inventaris.setReceived');
 });
 
 // ─────────────────────────────────────────────

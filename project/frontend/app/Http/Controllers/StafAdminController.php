@@ -121,50 +121,111 @@ class StafAdminController extends Controller
     }
 
     // ─────────────────────────────────────────────
-    // POST /stafadmin/inventaris/{id}/label — Simpan label + QR (file) + tanggal terima
+    // POST /stafadmin/inventaris/bulk-label — Simpan multiple label sekaligus
     // ─────────────────────────────────────────────
-    public function saveLabel(Request $request, $id)
+    public function bulkSaveLabels(Request $request)
     {
         $request->validate([
-            'label_number'  => 'nullable|string|max:255',
-            'received_date' => 'nullable|date',
-            'qr_data_url'   => 'nullable|string',
+            'labels'             => 'required|array',
+            'qr_data_urls'       => 'nullable|array',
+            'univ_qr_data_urls'  => 'nullable|array',
         ]);
 
+        $labels = $request->input('labels', []);
+        $qrUrls = $request->input('qr_data_urls', []);
+        $univUrls = $request->input('univ_qr_data_urls', []);
+
         try {
-            // Simpan gambar QR (PNG base64 dari browser) ke storage publik
-            $qrPath = null;
-            $dataUrl = $request->input('qr_data_url');
-            if ($dataUrl && str_starts_with($dataUrl, 'data:image')) {
-                $parts = explode(',', $dataUrl, 2);
-                if (count($parts) === 2) {
-                    $binary = base64_decode($parts[1]);
-                    if ($binary !== false) {
-                        $filename = "qr/asset-{$id}.png";
-                        Storage::disk('public')->put($filename, $binary);
-                        $qrPath = Storage::url($filename); // /storage/qr/asset-{id}.png
+            $hasError = false;
+            $errorMessage = '';
+
+            foreach ($labels as $id => $label_number) {
+                // Simpan QR sistem
+                $qrPath = null;
+                $dataUrl = $qrUrls[$id] ?? null;
+                if ($dataUrl && str_starts_with($dataUrl, 'data:image')) {
+                    $parts = explode(',', $dataUrl, 2);
+                    if (count($parts) === 2) {
+                        $binary = base64_decode($parts[1]);
+                        if ($binary !== false) {
+                            $filename = "qr/asset-{$id}.png";
+                            Storage::disk('public')->put($filename, $binary);
+                            $qrPath = Storage::url($filename);
+                        }
                     }
+                }
+
+                // Simpan QR universitas
+                $univQrPath = null;
+                $univDataUrl = $univUrls[$id] ?? null;
+                if ($univDataUrl && str_starts_with($univDataUrl, 'data:image')) {
+                    $parts = explode(',', $univDataUrl, 2);
+                    if (count($parts) === 2) {
+                        $binary = base64_decode($parts[1]);
+                        if ($binary !== false) {
+                            $filename = "qr/univ-asset-{$id}.png";
+                            Storage::disk('public')->put($filename, $binary);
+                            $univQrPath = Storage::url($filename);
+                        }
+                    }
+                }
+
+                $payload = [
+                    'label_number' => $label_number,
+                ];
+                if ($qrPath !== null) {
+                    $payload['qr_path'] = $qrPath;
+                }
+                if ($univQrPath !== null) {
+                    $payload['univ_qr_path'] = $univQrPath;
+                }
+
+                $response = Http::withHeaders($this->authHeaders())
+                    ->patch("{$this->apiUrl()}/api/assets/{$id}", $payload);
+
+                if (!$response->successful()) {
+                    $hasError = true;
+                    $errorMessage = $response->json()['message'] ?? 'Gagal menyimpan data inventaris.';
+                    break;
                 }
             }
 
-            $payload = [
-                'label_number'  => $request->input('label_number'),
-                'received_date' => $request->input('received_date'),
-            ];
-            if ($qrPath !== null) {
-                $payload['qr_path'] = $qrPath;
-            }
-
-            $response = Http::withHeaders($this->authHeaders())
-                ->patch("{$this->apiUrl()}/api/assets/{$id}", $payload);
-
-            if ($response->successful()) {
+            if ($hasError) {
                 return redirect()->route('stafadmin.inventaris.index')
-                    ->with('success', 'Data inventaris berhasil disimpan.');
+                    ->withErrors(['api' => $errorMessage]);
             }
 
             return redirect()->route('stafadmin.inventaris.index')
-                ->withErrors(['api' => $response->json()['message'] ?? 'Gagal menyimpan data inventaris.']);
+                ->with('success', 'Data inventaris berhasil disimpan secara massal.');
+        } catch (\Exception $e) {
+            return redirect()->route('stafadmin.inventaris.index')
+                ->withErrors(['api' => 'Tidak dapat terhubung ke server backend.']);
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // POST /stafadmin/inventaris/procurement-item/{sourceId}/received
+    // Simpan tanggal diterima ke SEMUA unit dengan source_item_id yang sama
+    // ─────────────────────────────────────────────
+    public function setReceivedDate(Request $request, $sourceId)
+    {
+        $request->validate([
+            'received_date' => 'required|date',
+        ]);
+
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->patch("{$this->apiUrl()}/api/assets/by-source/{$sourceId}/received", [
+                    'received_date' => $request->input('received_date'),
+                ]);
+
+            if ($response->successful()) {
+                return redirect()->route('stafadmin.inventaris.index')
+                    ->with('success', 'Tanggal diterima berhasil disimpan untuk semua unit barang.');
+            }
+
+            return redirect()->route('stafadmin.inventaris.index')
+                ->withErrors(['api' => $response->json()['message'] ?? 'Gagal menyimpan tanggal diterima.']);
         } catch (\Exception $e) {
             return redirect()->route('stafadmin.inventaris.index')
                 ->withErrors(['api' => 'Tidak dapat terhubung ke server backend.']);

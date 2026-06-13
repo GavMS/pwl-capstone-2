@@ -2,7 +2,17 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="40e16c3d-481a-4218-8411-95fb6a0698ea" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/backend/config/db.js" beforeDir="false" afterPath="$PROJECT_DIR$/project/backend/config/db.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/backend/controllers/assetController.js" beforeDir="false" afterPath="$PROJECT_DIR$/project/backend/controllers/assetController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/backend/controllers/procurementController.js" beforeDir="false" afterPath="$PROJECT_DIR$/project/backend/controllers/procurementController.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/backend/reset-and-seed.js" beforeDir="false" afterPath="$PROJECT_DIR$/project/backend/reset-and-seed.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/backend/routes/assets.js" beforeDir="false" afterPath="$PROJECT_DIR$/project/backend/routes/assets.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/app/Http/Controllers/InventoryController.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/app/Http/Controllers/InventoryController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/app/Http/Controllers/StafAdminController.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/app/Http/Controllers/StafAdminController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/resources/views/kalab/bhp/index.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/resources/views/kalab/bhp/index.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/resources/views/stafadmin/inventaris/index.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/resources/views/stafadmin/inventaris/index.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/resources/views/stafadmin/procurement/show.blade.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/resources/views/stafadmin/procurement/show.blade.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/project/frontend/routes/web.php" beforeDir="false" afterPath="$PROJECT_DIR$/project/frontend/routes/web.php" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,6 +80,7 @@
       <workItem from="1780980360080" duration="54000" />
       <workItem from="1781013118268" duration="1347000" />
       <workItem from="1781058950202" duration="33000" />
+      <workItem from="1781317002205" duration="2841000" />
     </task>
     <servers />
   </component>
