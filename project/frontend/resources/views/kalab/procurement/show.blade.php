@@ -370,6 +370,12 @@
                             {{-- Nama Barang --}}
                             <td>
                                 <p class="item-name">{{ $item['name'] }}</p>
+                                @if(!empty($item['room_name']))
+                                    <p class="item-sub"><i class="fas fa-map-marker-alt mr-1"></i>{{ $item['room_name'] }}</p>
+                                @endif
+                                @if(($item['item_type'] ?? '') === 'bhp' && (isset($item['min_stock']) || !empty($item['location'])))
+                                    <p class="item-sub"><i class="fas fa-layer-group mr-1"></i>Min stok: {{ $item['min_stock'] ?? 0 }}@if(!empty($item['location'])) · {{ $item['location'] }}@endif</p>
+                                @endif
                                 @if(!empty($item['notes']))
                                     <p class="item-sub">
                                         <i class="fas fa-sticky-note mr-1"></i>{{ $item['notes'] }}

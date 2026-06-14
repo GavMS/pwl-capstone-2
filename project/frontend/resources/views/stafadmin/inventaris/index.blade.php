@@ -129,6 +129,13 @@
                         <option value="{{ $yr }}">{{ $yr }}</option>
                     @endforeach
                 </select>
+                <select id="statusFilter" class="select-filter" onchange="filterRows()">
+                    <option value="all">Semua Status</option>
+                    <option value="Belum Diterima">Belum Diterima</option>
+                    <option value="Belum Dilabeli">Belum Dilabeli</option>
+                    <option value="Sedang Dilabeli">Sedang Dilabeli</option>
+                    <option value="Sudah Dilabeli">Sudah Dilabeli</option>
+                </select>
             </div>
             <div style="font-size:.75rem;color:#adb5bd;font-weight:600;">Total: <span id="displayedCount">{{ collect($assets)->groupBy('source_item_id')->count() }}</span> jenis barang</div>
         </div>
@@ -187,6 +194,7 @@
                             id="row-{{ $sourceItemId }}"
                             data-id="{{ $sourceItemId }}"
                             data-year="{{ $firstUnit['draft_year'] }}"
+                            data-status="{{ $statusText }}"
                             data-name="{{ strtolower($firstUnit['name'].' '.($firstUnit['draft_title'] ?? '')) }}">
 
                             <td style="text-align:center;font-weight:700;">{{ $rowIdx }}</td>
@@ -373,12 +381,12 @@ function toggleLabeliPanel(id) {
 
 /* ── Tanggal Diterima — enable/disable Labeli btn ───── */
 function onDateChange(id) {
-    const dateInput = document.getElementById('date-input-' + id);
-    const labeli    = document.getElementById('btn-labeli-' + id);
-    if (!labeli) return;
-    const hasDate = dateInput && dateInput.value.trim() !== '';
-    labeli.disabled = !hasDate;
-    labeli.title = hasDate ? 'Buka panel labeling' : 'Isi tanggal diterima terlebih dahulu';
+    // Tombol Labeli TIDAK di-enable di sini — hanya aktif setelah tanggal benar-benar
+    // disimpan (server set received_date → reload → tombol enabled). Cegah labeli sebelum simpan.
+    const labeli = document.getElementById('btn-labeli-' + id);
+    if (labeli && labeli.disabled) {
+        labeli.title = 'Klik "Simpan" tanggal diterima dulu sebelum melabeli';
+    }
 }
 
 function onSaveDateClick(event, id) {
@@ -486,13 +494,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ── Filter pencarian + tahun ────────────────────────── */
 function filterRows() {
-    const q    = document.getElementById('searchInput').value.toLowerCase();
-    const year = document.getElementById('yearFilter').value;
+    const q      = document.getElementById('searchInput').value.toLowerCase();
+    const year   = document.getElementById('yearFilter').value;
+    const status = document.getElementById('statusFilter').value;
     let count  = 0;
     document.querySelectorAll('.asset-row').forEach(row => {
-        const matchQ    = row.dataset.name.includes(q);
-        const matchYear = (year === 'all') || (row.dataset.year === year);
-        const visible   = matchQ && matchYear;
+        const matchQ      = row.dataset.name.includes(q);
+        const matchYear   = (year === 'all') || (row.dataset.year === year);
+        const matchStatus = (status === 'all') || (row.dataset.status === status);
+        const visible     = matchQ && matchYear && matchStatus;
         row.style.display = visible ? '' : 'none';
         const panel = document.getElementById('label-panel-' + row.dataset.id);
         if (panel && !visible) panel.style.display = 'none';

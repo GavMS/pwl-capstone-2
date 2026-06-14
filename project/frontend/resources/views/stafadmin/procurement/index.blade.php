@@ -240,6 +240,12 @@
                         <i class="fas fa-search search-icon"></i>
                         <input type="text" id="searchInput" placeholder="Cari judul draf..." />
                     </div>
+                    <select id="yearFilter" style="padding:.5rem .875rem;font-size:.8125rem;border:1px solid #d2d6da;border-radius:.5rem;color:#344767;background:#fff;cursor:pointer;outline:none;">
+                        <option value="all">Semua Tahun</option>
+                        @foreach(collect($drafts)->pluck('year')->unique()->sort()->values() as $yr)
+                            <option value="{{ $yr }}">{{ $yr }}</option>
+                        @endforeach
+                    </select>
                     <span class="result-count" id="resultCount">{{ count($drafts) }} draf</span>
                 </div>
             </div>
@@ -260,7 +266,7 @@
                     </thead>
                     <tbody id="draftsTableBody">
                         @forelse($drafts as $index => $d)
-                        <tr class="draft-row" data-title="{{ strtolower($d['title']) }}">
+                        <tr class="draft-row" data-title="{{ strtolower($d['title']) }}" data-year="{{ $d['year'] }}">
                             <td style="text-align:center;">
                                 <span class="cell-text" style="font-weight:600;">{{ $index + 1 }}</span>
                             </td>
@@ -271,7 +277,7 @@
                                 <span class="cell-text">{{ $d['year'] }}</span>
                             </td>
                             <td style="text-align:center;">
-                                <span class="cell-text" style="font-weight:600;">{{ $d['item_count'] }} item</span>
+                                <span class="cell-text" style="font-weight:600;">{{ $d['approved_item_count'] ?? $d['item_count'] }} item</span>
                             </td>
                             <td style="text-align:right;">
                                 <span class="cell-text" style="font-weight:600; color:#15803d;">
@@ -319,19 +325,23 @@
 
 <script>
 const searchInput  = document.getElementById('searchInput');
+const yearFilter   = document.getElementById('yearFilter');
 const resultCount  = document.getElementById('resultCount');
 const footerCount  = document.getElementById('footerCount');
 
 function applyFilter() {
     const q    = searchInput.value.toLowerCase().trim();
+    const year = yearFilter.value;
     const rows = document.querySelectorAll('#draftsTableBody .draft-row');
     let visible = 0;
 
     rows.forEach(row => {
-        const title  = row.dataset.title || '';
-        const matchQ = !q || title.includes(q);
-        row.style.display = matchQ ? '' : 'none';
-        if (matchQ) visible++;
+        const title     = row.dataset.title || '';
+        const matchQ    = !q || title.includes(q);
+        const matchYear = (year === 'all') || (row.dataset.year === year);
+        const show      = matchQ && matchYear;
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
     });
 
     // Pesan "tidak ditemukan"
@@ -358,5 +368,6 @@ function applyFilter() {
 }
 
 searchInput.addEventListener('input', applyFilter);
+yearFilter.addEventListener('change', applyFilter);
 </script>
 @endsection

@@ -296,10 +296,12 @@
                             <a href="{{ route('admin.users.edit', $u['id']) }}" class="btn-icon btn-icon-edit" title="Edit">
                                 <i class="fas fa-pencil-alt"></i>
                             </a>
+                            @if(($u['id'] ?? null) != (session('user')['id'] ?? null))
                             <button type="button" class="btn-icon btn-icon-delete" title="Hapus"
                                 onclick="openDeleteModal({{ $u['id'] }}, '{{ addslashes($u['name']) }}', '{{ addslashes($u['email']) }}', '{{ addslashes($u['role'] ?? '') }}')">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
+                            @endif
                         </div>
                     </td>
                 </tr>

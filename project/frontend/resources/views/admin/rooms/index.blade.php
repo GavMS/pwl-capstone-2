@@ -215,7 +215,7 @@
 <div class="filter-row">
     <div class="search-wrap">
         <i class="fas fa-search search-icon"></i>
-        <input type="text" id="searchInput" placeholder="Cari nama, kode, atau gedung ruangan..." />
+        <input type="text" id="searchInput" placeholder="Cari nama ruangan..." />
     </div>
     <span class="count-label" id="roomCount">{{ count($rooms) }} ruangan</span>
 </div>
@@ -226,13 +226,7 @@
         <table class="rooms-table" id="roomsTable">
             <thead>
                 <tr>
-                    <th>Kode</th>
                     <th>Nama Ruangan</th>
-                    <th>Gedung</th>
-                    <th>Lantai</th>
-                    <th style="text-align:center;">Kapasitas</th>
-                    <th>PIC</th>
-                    <th style="text-align:center;">Aset</th>
                     <th style="text-align:center; width:80px;">Aksi</th>
                 </tr>
             </thead>
@@ -240,26 +234,7 @@
                 @forelse($rooms as $r)
                 <tr class="room-row">
                     <td>
-                        <span class="code-text room-code-text">{{ $r['code'] ?? '-' }}</span>
-                    </td>
-                    <td>
                         <span class="room-name-bold room-name-text">{{ $r['name'] ?? '-' }}</span>
-                    </td>
-                    <td>
-                        <span class="cell-text room-building-text">{{ $r['building'] ?? '-' }}</span>
-                    </td>
-                    <td>
-                        <span class="cell-text">{{ $r['floor'] ?? '-' }}</span>
-                    </td>
-                    <td style="text-align:center;">
-                        <span class="cell-text">{{ $r['capacity'] ?? '-' }}</span>
-                    </td>
-                    <td>
-                        <span class="cell-text">{{ $r['pic'] ?? '-' }}</span>
-                    </td>
-                    <td style="text-align:center;">
-                        @php $ac = $r['asset_count'] ?? 0; @endphp
-                        <span class="asset-count {{ $ac == 0 ? 'asset-count-zero' : '' }}">{{ $ac }}</span>
                     </td>
                     <td>
                         <div class="action-group">
@@ -275,7 +250,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8">
+                    <td colspan="2">
                         <div class="empty-state">
                             <i class="fas fa-door-open"></i>
                             <p>Belum ada data ruangan. Klik <strong>Tambah Ruangan</strong> untuk memulai.</p>
@@ -364,11 +339,9 @@ function filterTable() {
     let visible = 0;
 
     document.querySelectorAll('#roomsTableBody .room-row').forEach(row => {
-        const name     = (row.querySelector('.room-name-text')?.textContent     ?? '').toLowerCase();
-        const code     = (row.querySelector('.room-code-text')?.textContent     ?? '').toLowerCase();
-        const building = (row.querySelector('.room-building-text')?.textContent ?? '').toLowerCase();
+        const name = (row.querySelector('.room-name-text')?.textContent ?? '').toLowerCase();
 
-        if (!q || name.includes(q) || code.includes(q) || building.includes(q)) {
+        if (!q || name.includes(q)) {
             row.style.display = '';
             visible++;
         } else {
