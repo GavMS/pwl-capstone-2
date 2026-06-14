@@ -326,7 +326,8 @@
                     <tr>
                         <th>NAMA BARANG</th>
                         <th style="text-align:center;">JUMLAH UNIT</th>
-                        <th>PILIH UNIT (per barang)</th>
+                        <th>PILIH UNIT</th>
+                        <th>STATUS</th>
                         <th>RUANGAN</th>
                         <th style="text-align:center;">AKSI</th>
                     </tr>
@@ -335,9 +336,10 @@
                     @php $grouped = collect($assets)->groupBy('name'); @endphp
                     @forelse($grouped as $groupName => $units)
                     @php
-                        $first      = $units->first();
-                        $roomCodes  = $units->pluck('room_code')->filter()->unique()->implode(', ');
-                        $searchData = strtolower($groupName.' '.$units->pluck('label_number')->filter()->implode(' ').' '.$units->pluck('code')->filter()->implode(' '));
+                        $first     = $units->first();
+                        $roomCodes = $units->pluck('room_code')->filter()->unique()->implode(', ');
+                        $searchData= strtolower($groupName.' '.$units->pluck('label_number')->filter()->implode(' '));
+                        $firstCond = $first['condition_status'] ?? 'Baik';
                     @endphp
                     <tr class="group-row"
                         data-search="{{ $searchData }}"
@@ -347,16 +349,25 @@
                             <span style="background:#f1f5f9;padding:.2rem .55rem;border-radius:.35rem;font-weight:700;">{{ $units->count() }}</span>
                         </td>
                         <td>
-                            <select class="form-control unit-select" style="min-width:210px;">
+                            <select class="form-control unit-select" style="min-width:160px;" onchange="onUnitChange(this)">
                                 @foreach($units as $u)
-                                @php $code = $u['label_number'] ?? ($u['code'] ?? ('#'.$u['id'])); @endphp
+                                @php $kode = $u['label_number'] ?? ($u['code'] ?? ('#'.$u['id'])); @endphp
                                 <option value="{{ $u['id'] }}"
-                                        data-name="{{ addslashes($groupName.' — '.$code) }}"
+                                        data-name="{{ addslashes($groupName.' — '.$kode) }}"
                                         data-cond="{{ $u['condition_status'] ?? 'Baik' }}">
-                                    {{ $code }} — {{ $u['condition_status'] ?? 'Baik' }}
+                                    {{ $kode }}
                                 </option>
                                 @endforeach
                             </select>
+                        </td>
+                        <td class="unit-status-cell">
+                            @if($firstCond === 'Baik')
+                                <span class="cond-badge cond-baik"><span class="cb-dot"></span>Baik</span>
+                            @elseif($firstCond === 'Perlu Maintenance')
+                                <span class="cond-badge cond-maint"><span class="cb-dot"></span>Perlu Maintenance</span>
+                            @else
+                                <span class="cond-badge cond-maint"><span class="cb-dot"></span>{{ $firstCond }}</span>
+                            @endif
                         </td>
                         <td><span class="cell-text font-semibold">{{ $roomCodes !== '' ? $roomCodes : '-' }}</span></td>
                         <td style="text-align:center;">
@@ -372,9 +383,9 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="5" style="text-align:center;padding:3rem;">
+                        <td colspan="6" style="text-align:center;padding:3rem;">
                             <i class="fas fa-box-open" style="font-size:2.5rem;color:#d2d6da;margin-bottom:1rem;display:block;"></i>
-                            <p style="color:#7b809a;">Tidak ada data inventaris.</p>
+                            <p style="color:#7b809a;">Tidak ada data inventaris yang sudah dilabeli.</p>
                         </td>
                     </tr>
                     @endforelse
@@ -490,6 +501,15 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 document.querySelectorAll('.modal-backdrop').forEach(m => {
     m.addEventListener('click', e => { if(e.target === m) closeModal(m.id); });
 });
+
+// ── Update badge status saat dropdown unit berubah ────────
+function onUnitChange(sel) {
+    const cond = sel.options[sel.selectedIndex]?.dataset?.cond || 'Baik';
+    const cell = sel.closest('tr').querySelector('.unit-status-cell');
+    const isMaint = cond === 'Perlu Maintenance';
+    const cls = isMaint ? 'cond-maint' : 'cond-baik';
+    cell.innerHTML = `<span class="cond-badge ${cls}"><span class="cb-dot"></span>${cond}</span>`;
+}
 
 // ── Aksi dari baris grup (pakai unit terpilih di dropdown) ──
 function selectedUnit(btn) {

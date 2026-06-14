@@ -25,7 +25,7 @@ exports.getLogsByAsset = async (req, res) => {
         // Ambil BHP yang digunakan untuk setiap log
         for (const log of logs) {
             const [usedItems] = await db.query(
-                `SELECT mc.*, c.name AS consumable_name, c.unit, c.code AS consumable_code
+                `SELECT mc.*, c.name AS consumable_name, c.code AS consumable_code
                  FROM maintenance_consumables mc
                  JOIN consumables c ON mc.consumable_id = c.id
                  WHERE mc.log_id = ?`,
@@ -60,7 +60,7 @@ exports.getAllLogs = async (req, res) => {
         // Ambil BHP yang digunakan untuk setiap log
         for (const log of logs) {
             const [usedItems] = await db.query(
-                `SELECT mc.*, c.name AS consumable_name, c.unit, c.code AS consumable_code
+                `SELECT mc.*, c.name AS consumable_name, c.code AS consumable_code
                  FROM maintenance_consumables mc
                  JOIN consumables c ON mc.consumable_id = c.id
                  WHERE mc.log_id = ?`,
@@ -135,7 +135,7 @@ exports.createLog = async (req, res) => {
             }
 
             const [[consumable]] = await connection.query(
-                'SELECT id, name, stock, unit FROM consumables WHERE id = ? FOR UPDATE',
+                'SELECT id, name, stock FROM consumables WHERE id = ? FOR UPDATE',
                 [item.consumable_id]
             );
 
@@ -152,7 +152,7 @@ exports.createLog = async (req, res) => {
                 await connection.rollback();
                 connection.release();
                 return res.status(400).json({
-                    message: `Stok BHP "${consumable.name}" tidak mencukupi. Stok tersedia: ${consumable.stock} ${consumable.unit ?? ''}, diminta: ${qty}.`
+                    message: `Stok BHP "${consumable.name}" tidak mencukupi. Stok tersedia: ${consumable.stock}, diminta: ${qty}.`
                 });
             }
 

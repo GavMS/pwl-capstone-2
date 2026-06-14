@@ -3,9 +3,6 @@ const router  = express.Router();
 const ctrl    = require('../controllers/consumableController');
 const auth    = require('../middleware/authMiddleware');
 
-// GET    /api/consumables/meta      — metadata untuk dropdown form BHP
-router.get('/meta',     auth, ctrl.getMeta);
-
 // GET    /api/consumables           — daftar semua BHP
 router.get('/',         auth, ctrl.getAllConsumables);
 

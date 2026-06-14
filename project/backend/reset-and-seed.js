@@ -106,19 +106,16 @@ async function run() {
 
     await db.query(`
         CREATE TABLE consumables (
-            id          BIGINT AUTO_INCREMENT PRIMARY KEY,
-            name        VARCHAR(255) NOT NULL,
-            code        VARCHAR(255) NULL UNIQUE,
-            category    VARCHAR(100) NULL,
-            unit        VARCHAR(100) NULL,
-            stock       INT NULL DEFAULT 0,
-            min_stock   INT NULL DEFAULT 0,
-            price       DECIMAL(15,2) NULL DEFAULT 0,
-            location    VARCHAR(100) NULL,
-            room_id     BIGINT NULL,
-            description TEXT NULL,
-            created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            id             BIGINT AUTO_INCREMENT PRIMARY KEY,
+            name           VARCHAR(255) NOT NULL,
+            stock          INT NULL DEFAULT 0,
+            min_stock      INT NULL DEFAULT 0,
+            price          DECIMAL(15,2) NULL DEFAULT 0,
+            room_id        BIGINT NULL,
+            description    TEXT NULL,
+            source_item_id BIGINT NULL,
+            created_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL
         )
     `);
@@ -148,10 +145,12 @@ async function run() {
             replaced_asset_id  BIGINT NULL,
             notes              TEXT NULL,
             review_status      VARCHAR(50) NOT NULL DEFAULT 'pending',
+            room_id            BIGINT NULL,
             created_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at         TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             FOREIGN KEY (draft_id)          REFERENCES procurement_drafts(id) ON DELETE CASCADE,
-            FOREIGN KEY (replaced_asset_id) REFERENCES assets(id) ON DELETE SET NULL
+            FOREIGN KEY (replaced_asset_id) REFERENCES assets(id) ON DELETE SET NULL,
+            FOREIGN KEY (room_id)           REFERENCES rooms(id) ON DELETE SET NULL
         )
     `);
 
@@ -159,6 +158,12 @@ async function run() {
     await db.query(`
         ALTER TABLE assets
         ADD CONSTRAINT fk_assets_source_item
+        FOREIGN KEY (source_item_id) REFERENCES procurement_items(id) ON DELETE SET NULL
+    `);
+    // FK consumables.source_item_id → procurement_items
+    await db.query(`
+        ALTER TABLE consumables
+        ADD CONSTRAINT fk_consumables_source_item
         FOREIGN KEY (source_item_id) REFERENCES procurement_items(id) ON DELETE SET NULL
     `);
 
@@ -272,15 +277,15 @@ async function run() {
     // ── SEED: CONSUMABLES (BHP) ──────────────────────────────
     console.log('🌱 Seeding consumables (BHP)...');
     const consumables = [
-        { name: 'Kabel UTP Cat6 Belden (Roll)',     code: 'BHP/KBL/001', category: 'Kabel',    unit: 'roll (305m)', stock: 3,  min: 1,  price: 1850000, location: 'GDG-IT-01' },
-        { name: 'Konektor RJ45 CommScope',          code: 'BHP/RJ/001',  category: 'Konektor', unit: 'box (100 pcs)', stock: 5,  min: 2,  price: 350000,  location: 'GDG-IT-01' },
-        { name: 'Thermal Paste Arctic MX-4',        code: 'BHP/TP/001',  category: 'Hardware', unit: 'tube (4g)',   stock: 12, min: 5,  price: 120000,  location: 'GDG-IT-01' },
-        { name: 'Baterai CMOS CR2032',              code: 'BHP/BTR/001', category: 'Hardware', unit: 'pcs',         stock: 50, min: 20, price: 15000,   location: 'GDG-IT-01' },
+        { name: 'Kabel UTP Cat6 Belden (Roll)', stock: 3,  price: 1850000, room: 'GDG-IT-01' },
+        { name: 'Konektor RJ45 CommScope',       stock: 5,  price: 350000,  room: 'GDG-IT-01' },
+        { name: 'Thermal Paste Arctic MX-4',     stock: 12, price: 120000,  room: 'GDG-IT-01' },
+        { name: 'Baterai CMOS CR2032',           stock: 50, price: 15000,   room: 'GDG-IT-01' },
     ];
     for (const c of consumables) {
         await db.query(
-            'INSERT INTO consumables (name, code, category, unit, stock, min_stock, price, location, room_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-            [c.name, c.code, c.category, c.unit, c.stock, c.min, c.price, c.location, roomMap['GDG-IT-01']]
+            'INSERT INTO consumables (name, stock, min_stock, price, room_id) VALUES (?, ?, ?, ?, ?)',
+            [c.name, c.stock, 0, c.price, roomMap[c.room]]
         );
     }
     console.log(`  ✓ ${consumables.length} consumables OK`);
@@ -296,15 +301,15 @@ async function run() {
     );
     const draftId1 = dr1.insertId;
     const items1 = [
-        { type: 'inventaris', name: 'Switch Cisco Catalyst 2960', price: 12000000, qty: 2, link: 'https://www.bhinneka.com/cisco-catalyst-2960', replaced: assetMap['IT/SW/22/001'] },
-        { type: 'bhp',        name: 'Kabel UTP Cat6 Belden',      price: 1850000,  qty: 4, link: 'https://www.bhinneka.com/belden-cat6',       replaced: null },
-        { type: 'inventaris', name: 'Webcam Logitech C920',       price: 1250000,  qty: 3, link: 'https://www.tokopedia.com/logitech-c920',    replaced: null }, // kandidat utk DITOLAK kaprodi saat uji Langkah 2
+        { type: 'inventaris', name: 'Switch Cisco Catalyst 2960', price: 12000000, qty: 2, link: 'https://www.bhinneka.com/cisco-catalyst-2960', replaced: assetMap['IT/SW/22/001'], room: 'LAB-JAR-01' },
+        { type: 'bhp',        name: 'Kabel UTP Cat6 Belden',      price: 1850000,  qty: 4, link: 'https://www.bhinneka.com/belden-cat6',         replaced: null,                    room: 'GDG-IT-01' },
+        { type: 'inventaris', name: 'Webcam Logitech C920',        price: 1250000,  qty: 3, link: 'https://www.tokopedia.com/logitech-c920',      replaced: null,                    room: 'LAB-KOM-01' },
     ];
     for (const it of items1) {
         await db.query(
-            `INSERT INTO procurement_items (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [draftId1, it.type, it.name, it.price, it.qty, it.link, it.replaced]
+            `INSERT INTO procurement_items (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id, room_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [draftId1, it.type, it.name, it.price, it.qty, it.link, it.replaced, roomMap[it.room]]
         );
     }
     console.log(`  ✓ Draft 1 "Pengadaan Lab Jaringan Komputer 2025" (submitted) — ${items1.length} items`);
@@ -317,14 +322,14 @@ async function run() {
     );
     const draftId2 = dr2.insertId;
     const items2 = [
-        { type: 'inventaris', name: 'PC Desktop Dell Optiplex 7090', price: 15500000, qty: 10, link: 'https://www.bhinneka.com/dell-optiplex-7090', replaced: null },
-        { type: 'bhp',        name: 'Thermal Paste Arctic MX-4',     price: 120000,   qty: 5,  link: 'https://www.tokopedia.com/arctic-mx-4',   replaced: null },
+        { type: 'inventaris', name: 'PC Desktop Dell Optiplex 7090', price: 15500000, qty: 10, link: 'https://www.bhinneka.com/dell-optiplex-7090', replaced: null, room: 'LAB-KOM-01' },
+        { type: 'bhp',        name: 'Thermal Paste Arctic MX-4',     price: 120000,   qty: 5,  link: 'https://www.tokopedia.com/arctic-mx-4',        replaced: null, room: 'GDG-IT-01' },
     ];
     for (const it of items2) {
         await db.query(
-            `INSERT INTO procurement_items (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id)
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [draftId2, it.type, it.name, it.price, it.qty, it.link, it.replaced]
+            `INSERT INTO procurement_items (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id, room_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [draftId2, it.type, it.name, it.price, it.qty, it.link, it.replaced, roomMap[it.room]]
         );
     }
     console.log(`  ✓ Draft 2 "Pengadaan Lab Komputer 2026" (draft) — ${items2.length} items`);
@@ -346,28 +351,28 @@ async function run() {
     //   asset: { label, recv } → sudah dilabel + diterima (status "Diterima")
     const items3 = [
         { type: 'inventaris', name: 'Access Point Ubiquiti UniFi U6', price: 2800000, qty: 1, review: 'approved',
-          link: 'https://www.bhinneka.com/ubiquiti-u6', replaced: null,
+          link: 'https://www.bhinneka.com/ubiquiti-u6', replaced: null, room: 'LAB-JAR-01',
           asset: { label: 'INV/2024/001', recv: '2024-06-10', qr: true } },
         { type: 'inventaris', name: 'Monitor LG 24MK600', price: 1900000, qty: 2, review: 'approved',
-          link: 'https://www.tokopedia.com/lg-24mk600', replaced: null,
-          asset: {} },
+          link: 'https://www.tokopedia.com/lg-24mk600', replaced: null, room: 'LAB-KOM-01',
+          asset: { label: 'INV/2024/002', recv: '2024-06-15' } },
         { type: 'inventaris', name: 'Printer HP LaserJet M404dn', price: 5200000, qty: 1, review: 'approved',
-          link: 'https://www.bhinneka.com/hp-m404dn', replaced: null,
+          link: 'https://www.bhinneka.com/hp-m404dn', replaced: null, room: 'LAB-KOM-01',
           asset: {} },
         { type: 'inventaris', name: 'Proyektor Epson EB-X06', price: 7400000, qty: 1, review: 'approved',
-          link: 'https://www.bhinneka.com/epson-eb-x06', replaced: assetMap['IT/PRJ/20/001'],
-          asset: { label: 'INV/2024/003', recv: '2024-07-02' } }, // aset lama IT/PRJ/20/001 sudah berstatus "Diganti"
+          link: 'https://www.bhinneka.com/epson-eb-x06', replaced: assetMap['IT/PRJ/20/001'], room: 'LAB-KOM-01',
+          asset: { label: 'INV/2024/004', recv: '2024-07-02' } },
         { type: 'inventaris', name: 'Scanner Epson DS-530', price: 6100000, qty: 1, review: 'rejected',
-          link: 'https://www.bhinneka.com/epson-ds530', replaced: null, asset: null }, // ditolak → tidak jadi aset
+          link: 'https://www.bhinneka.com/epson-ds530', replaced: null, room: 'LAB-KOM-01', asset: null },
         { type: 'bhp', name: 'Konektor RJ45 CommScope', price: 350000, qty: 3, review: 'approved',
-          link: 'https://www.tokopedia.com/rj45-commscope', replaced: null, asset: null }, // BHP → tidak jadi aset
+          link: 'https://www.tokopedia.com/rj45-commscope', replaced: null, room: 'GDG-IT-01', asset: null },
     ];
 
     for (const it of items3) {
         const [itemRes] = await db.query(
-            `INSERT INTO procurement_items (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id, review_status)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [draftId3, it.type, it.name, it.price, it.qty, it.link, it.replaced, it.review]
+            `INSERT INTO procurement_items (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id, review_status, room_id)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [draftId3, it.type, it.name, it.price, it.qty, it.link, it.replaced, it.review, roomMap[it.room] || null]
         );
 
         if (it.asset) {
@@ -375,9 +380,9 @@ async function run() {
             for (let q = 0; q < quantity; q++) {
                 const initialLabel = it.asset.label ? (quantity > 1 ? `${it.asset.label}/${q+1}` : it.asset.label) : null;
                 const [assetRes] = await db.query(
-                    `INSERT INTO assets (name, condition_status, year, price, status, source_item_id, label_number, received_date)
-                     VALUES (?, 'Baik', ?, ?, 'Baik', ?, ?, ?)`,
-                    [it.name, 2024, it.price, itemRes.insertId, initialLabel, it.asset.recv || null]
+                    `INSERT INTO assets (name, condition_status, year, price, status, source_item_id, label_number, received_date, room_id)
+                     VALUES (?, 'Baik', ?, ?, 'Baik', ?, ?, ?, ?)`,
+                    [it.name, 2024, it.price, itemRes.insertId, initialLabel, it.asset.recv || null, roomMap[it.room] || null]
                 );
 
                 // QR placeholder: tulis PNG kecil ke storage publik Laravel agar kolom QR terisi

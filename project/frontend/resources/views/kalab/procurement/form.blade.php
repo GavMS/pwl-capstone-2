@@ -216,7 +216,7 @@ select.item-input { appearance: none; -webkit-appearance: none; cursor: pointer;
                                     <th style="width:80px;">Qty</th>
                                     <th style="width:160px;">Ruangan</th>
                                     <th style="width:180px;">Link Pembelian</th>
-                                    <th id="replaceHeader" style="width:220px;">Ganti Aset (inv) / Min Stok &amp; Lokasi (BHP)</th>
+                                    <th id="replaceHeader" style="width:220px;">Ganti Aset (Inventaris)</th>
                                     <th style="width:120px;">Catatan</th>
                                     <th id="aksiHeader" style="width:50px; text-align:center;">Aksi</th>
                                 </tr>
@@ -301,10 +301,7 @@ function addItemRow(data = null) {
         <td><input type="url" name="items[${itemIndex}][purchase_link]" class="item-input" placeholder="https://..." value="${data ? escHtml(data.purchase_link || '') : ''}"></td>
         <td class="replace-cell">
             <select name="items[${itemIndex}][replaced_asset_id]" class="item-input replace-select" ${currentType === 'bhp' ? 'style="display:none;"' : ''}>${assetOptions}</select>
-            <div class="bhp-fields" style="${currentType === 'inventaris' ? 'display:none;' : 'display:flex; gap:.3rem;'}">
-                <input type="number" name="items[${itemIndex}][min_stock]" class="item-input bhp-minstock" min="0" placeholder="Min stok" value="${data && data.min_stock != null ? data.min_stock : ''}" style="width:90px;">
-                <input type="text" name="items[${itemIndex}][location]" class="item-input bhp-location" placeholder="Lokasi (mis. Lemari A)" value="${data ? escHtml(data.location || '') : ''}">
-            </div>
+            ${currentType === 'bhp' ? '<span style="font-size:.72rem;color:#adb5bd;font-style:italic;">— Tidak berlaku —</span>' : ''}
         </td>
         <td><input type="text" name="items[${itemIndex}][notes]" class="item-input" placeholder="Catatan..." value="${data ? escHtml(data.notes || '') : ''}"></td>
         <td class="aksi-col" style="text-align:center;">
@@ -324,16 +321,23 @@ function addItemRow(data = null) {
 // ── Dipanggil saat tipe berubah ──────────────────────────────
 function onTypeChange(selectEl) {
     const row = selectEl.closest('tr');
+    const replaceCell = row.querySelector('.replace-cell');
     const replaceSelect = row.querySelector('.replace-select');
-    const bhpFields = row.querySelector('.bhp-fields');
 
     if (selectEl.value === 'bhp') {
         replaceSelect.style.display = 'none';
-        replaceSelect.value = ''; // reset nilai
-        if (bhpFields) bhpFields.style.display = 'flex';
+        replaceSelect.value = '';
+        if (!replaceCell.querySelector('.bhp-na')) {
+            const span = document.createElement('span');
+            span.className = 'bhp-na';
+            span.style.cssText = 'font-size:.72rem;color:#adb5bd;font-style:italic;';
+            span.textContent = '— Tidak berlaku —';
+            replaceCell.appendChild(span);
+        }
     } else {
         replaceSelect.style.display = '';
-        if (bhpFields) bhpFields.style.display = 'none';
+        const naSpan = replaceCell.querySelector('.bhp-na');
+        if (naSpan) naSpan.remove();
     }
 }
 

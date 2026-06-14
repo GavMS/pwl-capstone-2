@@ -86,8 +86,6 @@ class ProcurementController extends Controller
             'items.*.replaced_asset_id' => 'nullable|integer',
             'items.*.notes' => 'nullable|string',
             'items.*.room_id' => 'nullable|integer',
-            'items.*.min_stock' => 'nullable|integer|min:0',
-            'items.*.location' => 'nullable|string|max:255',
         ]);
 
         try {
@@ -188,8 +186,6 @@ class ProcurementController extends Controller
             'items.*.replaced_asset_id' => 'nullable|integer',
             'items.*.notes' => 'nullable|string',
             'items.*.room_id' => 'nullable|integer',
-            'items.*.min_stock' => 'nullable|integer|min:0',
-            'items.*.location' => 'nullable|string|max:255',
         ]);
 
         try {
