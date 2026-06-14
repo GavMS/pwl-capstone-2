@@ -299,7 +299,7 @@
                             <th style="width:170px; text-align:right;">Total Harga</th>
                             <th style="width:165px; text-align:center;">Link Pembelian</th>
                             <th style="width:200px;">Menggantikan</th>
-                            <th style="width:160px; text-align:center;">Status Label</th>
+                            <th style="width:140px; text-align:center;">Labeli</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -319,6 +319,12 @@
                             </td>
                             <td>
                                 <p class="item-name">{{ $item['name'] }}</p>
+                                @if(!empty($item['room_name']))
+                                <p class="item-sub"><i class="fas fa-map-marker-alt mr-1"></i>{{ $item['room_name'] }}</p>
+                                @endif
+                                @if(($item['item_type'] ?? '') === 'bhp' && (isset($item['min_stock']) || !empty($item['location'])))
+                                <p class="item-sub"><i class="fas fa-layer-group mr-1"></i>Min stok: {{ $item['min_stock'] ?? 0 }}@if(!empty($item['location'])) · {{ $item['location'] }}@endif</p>
+                                @endif
                                 @if(!empty($item['notes']))
                                 <p class="item-sub"><i class="fas fa-sticky-note mr-1"></i>{{ $item['notes'] }}</p>
                                 @endif
@@ -360,16 +366,9 @@
                             </td>
                             <td style="text-align:center;">
                                 @if(($item['item_type'] ?? '') === 'inventaris')
-                                    @php $qty = max(1, intval($item['quantity'] ?? 1)); @endphp
-                                    <div class="label-qty-wrap">
-                                        <span class="label-status-pill label-pending">
-                                            <i class="fas fa-tags"></i>
-                                            {{ $qty }} unit
-                                        </span>
-                                        <span style="font-size:.65rem; color:#94a3b8;">
-                                            Labelling di halaman<br>Labeling Inventaris
-                                        </span>
-                                    </div>
+                                    <a href="{{ route('stafadmin.inventaris.index') }}" class="btn-go-label" style="padding:.4rem .85rem; font-size:.72rem;">
+                                        <i class="fas fa-tags"></i> Labeli
+                                    </a>
                                 @else
                                     <span style="font-size:.75rem; color:#d2d6da; font-style:italic;">— Tidak dilabeli —</span>
                                 @endif

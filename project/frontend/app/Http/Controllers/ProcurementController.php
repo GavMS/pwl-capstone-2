@@ -56,11 +56,13 @@ class ProcurementController extends Controller
     {
         $assets      = $this->fetchAssets();
         $consumables = $this->fetchConsumables();
+        $rooms       = $this->fetchRooms();
 
         return view('kalab.procurement.form', [
             'user'        => Session::get('user', []),
             'assets'      => $assets,
             'consumables' => $consumables,
+            'rooms'       => $rooms,
             'editDraft'   => null,
             'items'       => [],
         ]);
@@ -83,6 +85,9 @@ class ProcurementController extends Controller
             'items.*.purchase_link' => 'nullable|string',
             'items.*.replaced_asset_id' => 'nullable|integer',
             'items.*.notes' => 'nullable|string',
+            'items.*.room_id' => 'nullable|integer',
+            'items.*.min_stock' => 'nullable|integer|min:0',
+            'items.*.location' => 'nullable|string|max:255',
         ]);
 
         try {
@@ -136,6 +141,7 @@ class ProcurementController extends Controller
     {
         $assets      = $this->fetchAssets();
         $consumables = $this->fetchConsumables();
+        $rooms       = $this->fetchRooms();
 
         try {
             $response = Http::withHeaders($this->authHeaders())
@@ -158,6 +164,7 @@ class ProcurementController extends Controller
             'user'        => Session::get('user', []),
             'assets'      => $assets,
             'consumables' => $consumables,
+            'rooms'       => $rooms,
             'editDraft'   => $editDraft,
             'items'       => $items,
         ]);
@@ -180,6 +187,9 @@ class ProcurementController extends Controller
             'items.*.purchase_link' => 'nullable|string',
             'items.*.replaced_asset_id' => 'nullable|integer',
             'items.*.notes' => 'nullable|string',
+            'items.*.room_id' => 'nullable|integer',
+            'items.*.min_stock' => 'nullable|integer|min:0',
+            'items.*.location' => 'nullable|string|max:255',
         ]);
 
         try {
@@ -266,6 +276,20 @@ class ProcurementController extends Controller
             $response = Http::withHeaders($this->authHeaders())
                 ->get("{$this->apiUrl()}/api/consumables");
             return $response->successful() ? ($response->json()['consumables'] ?? $response->json() ?? []) : [];
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Helper: Ambil daftar ruangan dari backend (untuk penempatan aset/BHP)
+    // ─────────────────────────────────────────────
+    private function fetchRooms(): array
+    {
+        try {
+            $response = Http::withHeaders($this->authHeaders())
+                ->get("{$this->apiUrl()}/api/rooms");
+            return $response->successful() ? ($response->json()['rooms'] ?? []) : [];
         } catch (\Exception $e) {
             return [];
         }

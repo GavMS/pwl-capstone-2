@@ -120,9 +120,18 @@
 .cond-col { white-space:nowrap; }
 .date-col { white-space:nowrap; }
 .petugas-col { white-space:nowrap; }
-.biaya-col { white-space:nowrap; text-align:right; }
 .asset-name { font-size:.875rem; font-weight:600; color:#344767; margin:0; white-space:nowrap; }
 .asset-code { font-size:.8rem; font-weight:600; color:#adb5bd; font-family:monospace; white-space:nowrap; }
+.asset-meta { display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; margin-top:.2rem; }
+.label-pill {
+    display:inline-flex; align-items:center; gap:.3rem;
+    padding:.12rem .5rem; border-radius:.4rem;
+    background:#ede9fe; color:#6d28d9;
+    font-size:.7rem; font-weight:700; font-family:monospace; white-space:nowrap;
+}
+.label-pill i { font-size:.6rem; }
+.unit-hint { font-size:.68rem; color:#cbd5e1; font-style:italic; white-space:nowrap; }
+.asset-cat { font-size:.7rem; color:#adb5bd; }
 .bhp-cell { min-width:160px; }
 
 /* ─── Modal ──────────────────────────────────── */
@@ -161,13 +170,6 @@
             <h4 class="page-title"><i class="fas fa-history mr-2" style="color:#7928ca;"></i>Riwayat Maintenance</h4>
             <p class="page-subtitle">Seluruh catatan log pemeliharaan inventaris — lintas aset, terurut dari terbaru.</p>
         </div>
-        <button type="button" onclick="openNewMaintModal()"
-           style="display:inline-flex; align-items:center; gap:.5rem; padding:.6rem 1.25rem;
-                  background:linear-gradient(310deg,#7928ca,#ff007f); color:#fff; border-radius:.5rem;
-                  font-size:.875rem; font-weight:600; text-decoration:none; transition:opacity .2s; position:relative; z-index:10; border:none; cursor:pointer;"
-           onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-            <i class="fas fa-wrench"></i> Log Baru
-        </button>
     </div>
 
     {{-- Error Banner --}}
@@ -182,7 +184,6 @@
         $totalLogs   = count($logs);
         $logsWithBhp = collect($logs)->filter(fn($l) => count($l['used_consumables'] ?? []) > 0)->count();
         $uniqueAssets = collect($logs)->pluck('asset_id')->unique()->count();
-        $totalBiaya  = collect($logs)->sum(fn($l) => $l['cost'] ?? 0);
     @endphp
     <div class="stats-row">
         <div class="stat-card">
@@ -196,13 +197,6 @@
         <div class="stat-card">
             <div class="stat-icon green"><i class="fas fa-flask"></i></div>
             <div><div class="stat-val">{{ $logsWithBhp }}</div><div class="stat-lbl">Log Gunakan BHP</div></div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon teal"><i class="fas fa-coins"></i></div>
-            <div>
-                <div class="stat-val" style="font-size:1.1rem;">Rp {{ number_format($totalBiaya, 0, ',', '.') }}</div>
-                <div class="stat-lbl">Total Biaya</div>
-            </div>
         </div>
     </div>
 
@@ -233,12 +227,11 @@
                 <thead>
                     <tr>
                         <th>TANGGAL</th>
-                        <th>ASET</th>
+                        <th>BARANG (UNIT)</th>
                         <th>DESKRIPSI</th>
                         <th>KONDISI</th>
                         <th>BHP DIGUNAKAN</th>
                         <th>PETUGAS</th>
-                        <th style="text-align:right;">BIAYA</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -255,14 +248,26 @@
                         $dateStr = $log['maintenance_date'] ? \Carbon\Carbon::parse($log['maintenance_date'])->translatedFormat('d M Y') : '-';
                     @endphp
                     <tr class="item-row"
-                        data-search="{{ strtolower(($log['asset_name'] ?? '') . ' ' . ($log['description'] ?? '')) }}"
+                        data-search="{{ strtolower(($log['asset_name'] ?? '') . ' ' . ($log['asset_code'] ?? '') . ' ' . ($log['asset_label'] ?? '') . ' ' . ($log['description'] ?? '')) }}"
                         data-cond="{{ $condAfter }}">
                         <td class="date-col">
                             <span class="cell-text font-semibold" style="color:#344767;">{{ $dateStr }}</span>
                         </td>
-                        <td style="min-width:160px;">
+                        <td style="min-width:200px;">
                             <p class="asset-name">{{ $log['asset_name'] ?? '-' }}</p>
-                            <span class="asset-code">{{ $log['asset_code'] ?? '' }}</span>
+                            <div class="asset-meta">
+                                @if(!empty($log['asset_code']))
+                                    <span class="asset-code">{{ $log['asset_code'] }}</span>
+                                @endif
+                                @if(!empty($log['asset_label']))
+                                    <span class="label-pill"><i class="fas fa-tag"></i> {{ $log['asset_label'] }}</span>
+                                @else
+                                    <span class="unit-hint">Unit belum dilabeli</span>
+                                @endif
+                            </div>
+                            @if(!empty($log['asset_category']))
+                                <span class="asset-cat">{{ $log['asset_category'] }}</span>
+                            @endif
                         </td>
                         <td class="desc-cell">
                             <span class="desc-text" title="{{ $log['description'] ?? '' }}">{{ $log['description'] ?? '-' }}</span>
@@ -296,15 +301,10 @@
                         <td class="petugas-col">
                             <span class="cell-text">{{ $log['performed_by_name'] ?? '-' }}</span>
                         </td>
-                        <td class="biaya-col">
-                            <span class="cell-text">
-                                {{ ($log['cost'] ?? 0) > 0 ? 'Rp ' . number_format($log['cost'], 0, ',', '.') : '—' }}
-                            </span>
-                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" style="text-align:center;padding:3rem;">
+                        <td colspan="6" style="text-align:center;padding:3rem;">
                             <i class="fas fa-history" style="font-size:2.5rem;color:#d2d6da;margin-bottom:1rem;display:block;"></i>
                             <p style="color:#7b809a;">Belum ada riwayat maintenance. Mulai catat dari halaman Inventaris & Maintenance.</p>
                         </td>
@@ -345,225 +345,4 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-{{-- ── Modal: Log Maintenance Baru ───────────────────────────── --}}
-<div class="modal-backdrop" id="maintModal">
-    <div class="modal-box">
-        <div class="modal-header">
-            <h5 class="modal-title"><i class="fas fa-wrench mr-2" style="color:#7928ca;"></i>Catat Log Maintenance</h5>
-            <button class="modal-close" onclick="closeModal('maintModal')">&times;</button>
-        </div>
-        
-        <div class="mb-4" id="maintError" style="display:none; padding:.75rem 1rem; border-radius:.5rem; background:#fee2e2; color:#b91c1c; font-size:.875rem; font-weight:600;"></div>
-
-        <form id="maintForm" onsubmit="submitMaintLog(event)">
-            <div class="form-group">
-                <label class="form-label">Pilih Aset Inventaris <span>*</span></label>
-                <select id="mAssetSelect" class="form-control" required onchange="updateAssetInfo(this)">
-                    <option value="">-- Cari / Pilih Aset --</option>
-                    @foreach($assets as $a)
-                        <option value="{{ $a['id'] }}" data-cond="{{ $a['condition_status'] ?? 'Baik' }}">[{{ $a['code'] }}] {{ $a['name'] }}</option>
-                    @endforeach
-                </select>
-            </div>
-            
-            <div style="background:#f5f6fb;border-radius:.75rem;padding:.875rem 1.25rem;margin-bottom:1.25rem;display:none;" id="assetInfoBox">
-                <span style="font-size:.8rem;color:#7b809a;">Kondisi saat ini: </span>
-                <span id="mCondBefore" style="font-size:.8rem;font-weight:600;color:#344767;"></span>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Tanggal Maintenance <span>*</span></label>
-                    <input type="date" id="mDate" class="form-control" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Kondisi Setelah Maintenance <span>*</span></label>
-                    <select id="mCondAfter" class="form-control" required>
-                        <option value="Baik">Baik</option>
-                        <option value="Perlu Maintenance">Perlu Maintenance</option>
-                        <option value="Rusak Ringan">Rusak Ringan</option>
-                        <option value="Rusak Berat">Rusak Berat</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Deskripsi Pekerjaan Maintenance <span>*</span></label>
-                <textarea id="mDesc" class="form-control" rows="3" placeholder="Contoh: Kalibrasi sensor suhu..." required></textarea>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Biaya Maintenance (Rp)</label>
-                    <input type="number" id="mCost" class="form-control" min="0" value="0" placeholder="0">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Catatan Tambahan</label>
-                    <input type="text" id="mNotes" class="form-control" placeholder="Catatan opsional...">
-                </div>
-            </div>
-
-            {{-- BHP yang digunakan --}}
-            <div class="bhp-section">
-                <div class="bhp-section-title"><i class="fas fa-flask mr-1"></i> BHP yang Digunakan (Opsional)</div>
-                <p style="font-size:.8rem;color:#7b809a;margin:0 0 .75rem;">Stok otomatis berkurang.</p>
-                <div id="bhpUsedList"></div>
-                <button type="button" class="btn-add-bhp" onclick="addBhpRow()">
-                    <i class="fas fa-plus"></i> Tambah BHP
-                </button>
-            </div>
-
-            <div class="form-footer">
-                <button type="button" class="btn-cancel" onclick="closeModal('maintModal')">Batal</button>
-                <button type="submit" class="btn-submit" id="btnSubmitMaint">
-                    <i class="fas fa-save mr-1"></i> Simpan Log
-                </button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<script>
-const API_URL = '{{ $apiUrl }}';
-const TOKEN   = '{{ $token }}';
-const CONSUMABLES = @json($consumables);
-
-function openNewMaintModal() {
-    document.getElementById('mAssetSelect').value = '';
-    document.getElementById('assetInfoBox').style.display = 'none';
-    document.getElementById('mCondBefore').textContent = '';
-    document.getElementById('mDate').value = new Date().toISOString().split('T')[0];
-    document.getElementById('mCondAfter').value = 'Baik';
-    document.getElementById('mDesc').value = '';
-    document.getElementById('mCost').value = 0;
-    document.getElementById('mNotes').value = '';
-    document.getElementById('bhpUsedList').innerHTML = '';
-    document.getElementById('maintError').style.display = 'none';
-    openModal('maintModal');
-}
-
-function updateAssetInfo(sel) {
-    const box = document.getElementById('assetInfoBox');
-    const condLabel = document.getElementById('mCondBefore');
-    if(!sel.value) {
-        box.style.display = 'none';
-        return;
-    }
-    const opt = sel.options[sel.selectedIndex];
-    condLabel.textContent = opt.dataset.cond;
-    box.style.display = 'block';
-}
-
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-document.querySelectorAll('.modal-backdrop').forEach(m => {
-    m.addEventListener('click', e => { if(e.target === m) closeModal(m.id); });
-});
-
-function addBhpRow() {
-    const container = document.getElementById('bhpUsedList');
-    const rowId = 'bhpRow_' + Date.now();
-    const options = CONSUMABLES.map(c => 
-        `<option value="${c.id}" data-unit="${c.unit ?? ''}" data-stock="${c.stock ?? 0}">${c.name} (Stok: ${c.stock ?? 0} ${c.unit ?? ''})</option>`
-    ).join('');
-    
-    const row = document.createElement('div');
-    row.className = 'bhp-item-row';
-    row.id = rowId;
-    row.innerHTML = `
-        <select class="form-control bhp-select" onchange="updateBhpQtyMax(this)" required style="flex:2;">
-            <option value="">-- Pilih BHP --</option>
-            ${options}
-        </select>
-        <div style="display:flex; align-items:stretch; flex:1; min-width:120px;">
-            <input type="number" class="form-control bhp-qty" min="1" value="1" placeholder="Jumlah" required style="border-right:0; border-top-right-radius:0; border-bottom-right-radius:0; min-width:60px; padding-left:0.5rem;">
-            <span class="bhp-unit-label" style="background:#f5f6fb; padding:0 .75rem; border:1px solid #d2d6da; border-left:0; border-top-right-radius:.5rem; border-bottom-right-radius:.5rem; font-size:.8125rem; color:#7b809a; white-space:nowrap; display:flex; align-items:center;">-</span>
-        </div>
-        <button type="button" class="btn-remove-bhp" onclick="document.getElementById('${rowId}').remove()" style="flex:none;">
-            <i class="fas fa-times"></i>
-        </button>
-    `;
-    container.appendChild(row);
-}
-
-function updateBhpQtyMax(selectEl) {
-    const opt = selectEl.options[selectEl.selectedIndex];
-    const stock = parseInt(opt?.dataset?.stock) || 999;
-    const unit = opt?.dataset?.unit || '-';
-    const row = selectEl.closest('.bhp-item-row');
-    row.querySelector('.bhp-qty').max = stock;
-    row.querySelector('.bhp-unit-label').textContent = unit;
-}
-
-async function submitMaintLog(e) {
-    e.preventDefault();
-    const assetId = document.getElementById('mAssetSelect').value;
-    const errEl   = document.getElementById('maintError');
-    errEl.style.display = 'none';
-
-    if (!assetId) {
-        errEl.textContent = 'Silakan pilih aset terlebih dahulu.';
-        errEl.style.display = 'block';
-        return;
-    }
-
-    const bhpRows = document.querySelectorAll('#bhpUsedList .bhp-item-row');
-    const consumables_used = [];
-    let bhpValid = true;
-
-    bhpRows.forEach(row => {
-        const sel = row.querySelector('.bhp-select');
-        const qty = row.querySelector('.bhp-qty');
-        if (!sel.value) {
-            errEl.textContent = 'Pilih BHP atau hapus baris BHP yang kosong.';
-            bhpValid = false; return;
-        }
-        consumables_used.push({
-            consumable_id: parseInt(sel.value),
-            quantity: parseInt(qty.value)
-        });
-    });
-
-    if (!bhpValid) { errEl.style.display = 'block'; return; }
-
-    const payload = {
-        asset_id: parseInt(assetId),
-        maintenance_date: document.getElementById('mDate').value,
-        description: document.getElementById('mDesc').value,
-        condition_after: document.getElementById('mCondAfter').value,
-        cost: document.getElementById('mCost').value ? parseFloat(document.getElementById('mCost').value) : 0,
-        notes: document.getElementById('mNotes').value,
-        consumables_used
-    };
-
-    const btn = document.getElementById('btnSubmitMaint');
-    const oriText = btn.innerHTML;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...';
-    btn.disabled = true;
-
-    try {
-        const resp = await fetch(`${API_URL}/api/maintenance`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${TOKEN}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-        const data = await resp.json();
-        if (resp.ok) {
-            window.location.reload();
-        } else {
-            errEl.textContent = data.message || 'Gagal menyimpan log maintenance.';
-            errEl.style.display = 'block';
-            btn.innerHTML = oriText;
-            btn.disabled = false;
-        }
-    } catch (err) {
-        errEl.textContent = 'Terjadi kesalahan jaringan.';
-        errEl.style.display = 'block';
-        btn.innerHTML = oriText;
-        btn.disabled = false;
-    }
-}
-</script>
 @endsection

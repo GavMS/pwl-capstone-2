@@ -47,8 +47,9 @@ exports.getLogsByAsset = async (req, res) => {
 exports.getAllLogs = async (req, res) => {
     try {
         const [logs] = await db.query(
-            `SELECT ml.*, 
+            `SELECT ml.*,
                     a.name AS asset_name, a.code AS asset_code,
+                    a.label_number AS asset_label, a.category AS asset_category,
                     u.name AS performed_by_name
              FROM maintenance_logs ml
              LEFT JOIN assets a ON ml.asset_id = a.id

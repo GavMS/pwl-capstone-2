@@ -9,7 +9,8 @@ exports.getAllDrafts = async (req, res) => {
             SELECT pd.*, u.name AS creator_name,
                    COALESCE(items.item_count, 0)          AS item_count,
                    COALESCE(items.total_price, 0)         AS total_price,
-                   COALESCE(approved.approved_total, 0)   AS approved_total_price
+                   COALESCE(approved.approved_total, 0)   AS approved_total_price,
+                   COALESCE(approved.approved_count, 0)   AS approved_item_count
             FROM procurement_drafts pd
             LEFT JOIN users u ON pd.created_by = u.id
             LEFT JOIN (
@@ -18,7 +19,7 @@ exports.getAllDrafts = async (req, res) => {
                 GROUP BY draft_id
             ) items ON pd.id = items.draft_id
             LEFT JOIN (
-                SELECT draft_id, SUM(price * quantity) AS approved_total
+                SELECT draft_id, SUM(price * quantity) AS approved_total, COUNT(*) AS approved_count
                 FROM procurement_items
                 WHERE review_status != 'rejected'
                 GROUP BY draft_id
@@ -54,9 +55,11 @@ exports.getDraftById = async (req, res) => {
 
         // 2. Ambil semua item draf
         const [itemRows] = await db.query(
-            `SELECT pi.*, a.name AS replaced_asset_name, a.code AS replaced_asset_code
+            `SELECT pi.*, a.name AS replaced_asset_name, a.code AS replaced_asset_code,
+                    rm.name AS room_name, rm.code AS room_code
              FROM procurement_items pi
-             LEFT JOIN assets a ON pi.replaced_asset_id = a.id
+             LEFT JOIN assets a  ON pi.replaced_asset_id = a.id
+             LEFT JOIN rooms rm  ON pi.room_id = rm.id
              WHERE pi.draft_id = ?`,
             [id]
         );
@@ -101,9 +104,9 @@ exports.createDraft = async (req, res) => {
                 if (!item.name || !item.name.trim()) continue;
 
                 await connection.query(
-                    `INSERT INTO procurement_items 
-                     (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id, notes) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                    `INSERT INTO procurement_items
+                     (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id, notes, room_id, min_stock, location)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         draftId,
                         item.item_type || 'inventaris',
@@ -112,7 +115,10 @@ exports.createDraft = async (req, res) => {
                         item.quantity || 0,
                         item.purchase_link?.trim() || null,
                         item.replaced_asset_id || null,
-                        item.notes?.trim() || null
+                        item.notes?.trim() || null,
+                        item.room_id || null,
+                        (item.min_stock === undefined || item.min_stock === null || item.min_stock === '') ? null : parseInt(item.min_stock),
+                        item.location?.trim() || null
                     ]
                 );
             }
@@ -175,9 +181,9 @@ exports.updateDraft = async (req, res) => {
                 if (!item.name || !item.name.trim()) continue;
 
                 await connection.query(
-                    `INSERT INTO procurement_items 
-                     (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id, notes) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+                    `INSERT INTO procurement_items
+                     (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id, notes, room_id, min_stock, location)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         id,
                         item.item_type || 'inventaris',
@@ -186,7 +192,10 @@ exports.updateDraft = async (req, res) => {
                         item.quantity || 0,
                         item.purchase_link?.trim() || null,
                         item.replaced_asset_id || null,
-                        item.notes?.trim() || null
+                        item.notes?.trim() || null,
+                        item.room_id || null,
+                        (item.min_stock === undefined || item.min_stock === null || item.min_stock === '') ? null : parseInt(item.min_stock),
+                        item.location?.trim() || null
                     ]
                 );
             }
@@ -296,7 +305,7 @@ exports.finalizeDraft = async (req, res) => {
         // ── Materialisasi inventaris: tiap item 'inventaris' yang disetujui → baris aset nyata sebanyak quantity ──
         // (per-barang, BHP dilewati, idempotent via assets.source_item_id)
         const [approvedInvItems] = await connection.query(
-            `SELECT pi.id, pi.name, pi.price, pi.quantity
+            `SELECT pi.id, pi.name, pi.price, pi.quantity, pi.room_id
              FROM procurement_items pi
              WHERE pi.draft_id = ?
                AND pi.item_type = 'inventaris'
@@ -312,18 +321,51 @@ exports.finalizeDraft = async (req, res) => {
             const needed = (item.quantity || 1) - (countRow.existing_count || 0);
             for (let k = 0; k < needed; k++) {
                 await connection.query(
-                    `INSERT INTO assets (name, condition_status, year, price, status, source_item_id, received_date)
-                     VALUES (?, 'Baik', ?, ?, 'Baik', ?, NULL)`,
-                    [item.name, drafts[0].year, item.price || 0, item.id]
+                    `INSERT INTO assets (name, condition_status, year, price, status, source_item_id, room_id, received_date)
+                     VALUES (?, 'Baik', ?, ?, 'Baik', ?, ?, NULL)`,
+                    [item.name, drafts[0].year, item.price || 0, item.id, item.room_id || null]
                 );
                 assetsCreatedCount++;
             }
         }
 
+        // ── Materialisasi BHP: tiap item 'bhp' disetujui → baris consumables (idempotent via source_item_id) ──
+        const [approvedBhpItems] = await connection.query(
+            `SELECT pi.id, pi.name, pi.price, pi.quantity, pi.room_id, pi.min_stock, pi.location
+             FROM procurement_items pi
+             WHERE pi.draft_id = ?
+               AND pi.item_type = 'bhp'
+               AND pi.review_status = 'approved'`,
+            [id]
+        );
+        let consumablesCreatedCount = 0;
+        for (const item of approvedBhpItems) {
+            const [[existing]] = await connection.query(
+                `SELECT COUNT(*) AS cnt FROM consumables WHERE source_item_id = ?`,
+                [item.id]
+            );
+            if ((existing.cnt || 0) > 0) continue; // sudah dimaterialisasi sebelumnya
+            await connection.query(
+                `INSERT INTO consumables (name, stock, min_stock, price, location, room_id, source_item_id)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    item.name,
+                    item.quantity || 0,
+                    item.min_stock || 0,
+                    item.price || 0,
+                    item.location || null,
+                    item.room_id || null,
+                    item.id
+                ]
+            );
+            consumablesCreatedCount++;
+        }
+
         await connection.commit();
         res.json({
             message: 'Draf berhasil difinalisasi. Item yang belum diputuskan otomatis disetujui.',
-            assets_created: assetsCreatedCount
+            assets_created: assetsCreatedCount,
+            consumables_created: consumablesCreatedCount
         });
     } catch (error) {
         await connection.rollback();

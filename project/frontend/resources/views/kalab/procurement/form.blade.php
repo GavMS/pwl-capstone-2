@@ -214,8 +214,9 @@ select.item-input { appearance: none; -webkit-appearance: none; cursor: pointer;
                                     <th style="min-width:200px;">Nama Barang</th>
                                     <th style="width:140px;">Harga Satuan (Rp)</th>
                                     <th style="width:80px;">Qty</th>
+                                    <th style="width:160px;">Ruangan</th>
                                     <th style="width:180px;">Link Pembelian</th>
-                                    <th id="replaceHeader" style="width:180px;">Menggantikan Aset</th>
+                                    <th id="replaceHeader" style="width:220px;">Ganti Aset (inv) / Min Stok &amp; Lokasi (BHP)</th>
                                     <th style="width:120px;">Catatan</th>
                                     <th id="aksiHeader" style="width:50px; text-align:center;">Aksi</th>
                                 </tr>
@@ -252,6 +253,7 @@ select.item-input { appearance: none; -webkit-appearance: none; cursor: pointer;
 <script>
 const assets      = @json($assets);       // list inventaris
 const consumables = @json($consumables);  // list BHP (tidak dipakai di dropdown, tapi dikirim untuk referensi)
+const rooms       = @json($rooms ?? []);  // daftar ruangan untuk penempatan aset/BHP
 const initialItems = @json($items);
 let itemIndex = 0;
 
@@ -278,6 +280,13 @@ function addItemRow(data = null) {
         assetOptions += `<option value="${a.id}" ${sel}>${a.name} (${a.code || '-'})</option>`;
     });
 
+    // Opsi dropdown ruangan
+    let roomOptions = '<option value="">— Pilih Ruangan —</option>';
+    rooms.forEach(r => {
+        const sel = (data && data.room_id == r.id) ? 'selected' : '';
+        roomOptions += `<option value="${r.id}" ${sel}>${escHtml(r.name)}${r.code ? ' (' + escHtml(r.code) + ')' : ''}</option>`;
+    });
+
     tr.innerHTML = `
         <td>
             <select name="items[${itemIndex}][item_type]" class="item-input type-select" required onchange="onTypeChange(this)">
@@ -288,10 +297,14 @@ function addItemRow(data = null) {
         <td><input type="text" name="items[${itemIndex}][name]" class="item-input" placeholder="Nama barang..." value="${data ? escHtml(data.name) : ''}" required></td>
         <td><input type="number" name="items[${itemIndex}][price]" class="item-input calc-trigger input-price" min="0" placeholder="0" value="${data ? data.price : '0'}" required></td>
         <td><input type="number" name="items[${itemIndex}][quantity]" class="item-input calc-trigger input-qty" min="1" placeholder="1" value="${data ? data.quantity : '1'}" required></td>
+        <td><select name="items[${itemIndex}][room_id]" class="item-input">${roomOptions}</select></td>
         <td><input type="url" name="items[${itemIndex}][purchase_link]" class="item-input" placeholder="https://..." value="${data ? escHtml(data.purchase_link || '') : ''}"></td>
         <td class="replace-cell">
             <select name="items[${itemIndex}][replaced_asset_id]" class="item-input replace-select" ${currentType === 'bhp' ? 'style="display:none;"' : ''}>${assetOptions}</select>
-            <input type="text" class="item-input replace-disabled" value="Tidak berlaku (BHP)" disabled style="background-color: #f8f9fa; color: #adb5bd; cursor: not-allowed; ${currentType === 'inventaris' ? 'display:none;' : ''}" />
+            <div class="bhp-fields" style="${currentType === 'inventaris' ? 'display:none;' : 'display:flex; gap:.3rem;'}">
+                <input type="number" name="items[${itemIndex}][min_stock]" class="item-input bhp-minstock" min="0" placeholder="Min stok" value="${data && data.min_stock != null ? data.min_stock : ''}" style="width:90px;">
+                <input type="text" name="items[${itemIndex}][location]" class="item-input bhp-location" placeholder="Lokasi (mis. Lemari A)" value="${data ? escHtml(data.location || '') : ''}">
+            </div>
         </td>
         <td><input type="text" name="items[${itemIndex}][notes]" class="item-input" placeholder="Catatan..." value="${data ? escHtml(data.notes || '') : ''}"></td>
         <td class="aksi-col" style="text-align:center;">
@@ -312,15 +325,15 @@ function addItemRow(data = null) {
 function onTypeChange(selectEl) {
     const row = selectEl.closest('tr');
     const replaceSelect = row.querySelector('.replace-select');
-    const replaceDisabled = row.querySelector('.replace-disabled');
+    const bhpFields = row.querySelector('.bhp-fields');
 
     if (selectEl.value === 'bhp') {
         replaceSelect.style.display = 'none';
         replaceSelect.value = ''; // reset nilai
-        replaceDisabled.style.display = '';
+        if (bhpFields) bhpFields.style.display = 'flex';
     } else {
         replaceSelect.style.display = '';
-        replaceDisabled.style.display = 'none';
+        if (bhpFields) bhpFields.style.display = 'none';
     }
 }
 

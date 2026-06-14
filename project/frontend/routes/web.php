@@ -6,7 +6,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\RoomManagementController;
 use App\Http\Controllers\ProcurementController;
-use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\StafAdminController;
 use App\Http\Controllers\KaprodController;
 use App\Http\Controllers\StafLabController;
@@ -63,11 +62,6 @@ Route::prefix('kalab')->middleware('role:Kepala Laboratorium')->group(function (
     Route::put('/procurement/{id}',         [ProcurementController::class, 'update'])->name('kalab.procurement.update');
     Route::patch('/procurement/{id}/submit',[ProcurementController::class, 'submit'])->name('kalab.procurement.submit');
     Route::delete('/procurement/{id}',      [ProcurementController::class, 'destroy'])->name('kalab.procurement.destroy');
-    
-    // Inventaris & BHP
-    Route::get('/inventaris',               [InventoryController::class, 'assets'])->name('kalab.inventaris.index');
-    Route::get('/bhp',                      [InventoryController::class, 'consumables'])->name('kalab.bhp.index');
-    Route::patch('/bhp/{id}',               [InventoryController::class, 'updateBhp'])->name('kalab.bhp.update');
 });
 
 // ─────────────────────────────────────────────

@@ -138,6 +138,12 @@ exports.checkDelete = async (req, res) => {
         }
 
         const dependencies = await checkUserDependencies(id);
+
+        // Cegah hapus akun sendiri — tampilkan sebagai pemblokir di modal frontend
+        if (req.user && String(req.user.id) === String(id)) {
+            dependencies.unshift({ label: 'Akun Anda sendiri (sedang login)', count: 1 });
+        }
+
         const canDelete = dependencies.length === 0;
 
         res.json({
@@ -186,7 +192,7 @@ exports.create = async (req, res) => {
 
         // Kepala Laboratorium & Ketua Program Studi hanya boleh 1 aktif
         const [roleRow] = await db.query('SELECT name FROM roles WHERE id = ?', [role_id]);
-        const uniqueRoles = ['Kepala Laboratorium', 'Ketua Program Studi'];
+        const uniqueRoles = ['Administrator', 'Kepala Laboratorium', 'Ketua Program Studi'];
         if (roleRow.length > 0 && uniqueRoles.includes(roleRow[0].name)) {
             const [existingUnique] = await db.query(
                 'SELECT id FROM users WHERE role_id = ? AND is_active = 1', [role_id]
@@ -236,7 +242,7 @@ exports.update = async (req, res) => {
 
         // Kepala Laboratorium & Ketua Program Studi hanya boleh 1 aktif
         const [roleRow] = await db.query('SELECT name FROM roles WHERE id = ?', [role_id]);
-        const uniqueRoles = ['Kepala Laboratorium', 'Ketua Program Studi'];
+        const uniqueRoles = ['Administrator', 'Kepala Laboratorium', 'Ketua Program Studi'];
         if (roleRow.length > 0 && uniqueRoles.includes(roleRow[0].name)) {
             const [existingUnique] = await db.query(
                 'SELECT id FROM users WHERE role_id = ? AND id != ? AND is_active = 1', [role_id, id]
@@ -275,6 +281,11 @@ exports.update = async (req, res) => {
 // ─────────────────────────────────────────────
 exports.destroy = async (req, res) => {
     const { id } = req.params;
+
+    // Cegah hapus akun sendiri
+    if (req.user && String(req.user.id) === String(id)) {
+        return res.status(403).json({ message: 'Anda tidak dapat menghapus akun Anda sendiri.' });
+    }
 
     try {
         // Cek user ada
@@ -327,7 +338,7 @@ exports.getDashboardStats = async (req, res) => {
         const [[bhpStats]] = await db.query(`
             SELECT
                 COUNT(*) AS bhp_count,
-                SUM(CASE WHEN quantity <= 5 THEN 1 ELSE 0 END) AS low_stock_count
+                SUM(CASE WHEN stock <= min_stock THEN 1 ELSE 0 END) AS low_stock_count
             FROM consumables
         `).catch(() => [[{ bhp_count: 0, low_stock_count: 0 }]]);
 

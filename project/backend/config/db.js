@@ -253,6 +253,23 @@ const testConnection = async () => {
             console.log('Added review_status column to procurement_items table.');
         }
 
+        // ── Safe migration: penempatan ruangan (inventaris) + lokasi & min stok (BHP) ditentukan saat pengadaan ──
+        const piExtraCols = [
+            { name: 'room_id',   ddl: 'ADD COLUMN room_id BIGINT NULL' },
+            { name: 'min_stock', ddl: 'ADD COLUMN min_stock INT NULL' },
+            { name: 'location',  ddl: 'ADD COLUMN location VARCHAR(255) NULL' },
+        ];
+        for (const col of piExtraCols) {
+            const [exists] = await connection.query(`
+                SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'procurement_items' AND COLUMN_NAME = ?
+            `, [col.name]);
+            if (exists.length === 0) {
+                await connection.query(`ALTER TABLE procurement_items ${col.ddl}`);
+                console.log(`Added ${col.name} column to procurement_items table.`);
+            }
+        }
+
         // ── Safe migration: kolom inventaris baru di assets (label / QR / penerimaan / asal pengadaan) ──
         // assets.label_number — nomor label fisik (UNIQUE; NULL ganda diizinkan MySQL)
         const [labelCols] = await connection.query(`
@@ -303,6 +320,17 @@ const testConnection = async () => {
             await connection.query(`ALTER TABLE assets ADD COLUMN source_item_id BIGINT NULL`);
             await connection.query(`ALTER TABLE assets ADD CONSTRAINT fk_assets_source_item FOREIGN KEY (source_item_id) REFERENCES procurement_items(id) ON DELETE SET NULL`);
             console.log('Added source_item_id column + FK to assets table.');
+        }
+
+        // consumables.source_item_id — jejak asal pengadaan BHP + cegah materialisasi ganda
+        const [conSrcCols] = await connection.query(`
+            SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+            WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'consumables' AND COLUMN_NAME = 'source_item_id'
+        `);
+        if (conSrcCols.length === 0) {
+            await connection.query(`ALTER TABLE consumables ADD COLUMN source_item_id BIGINT NULL`);
+            await connection.query(`ALTER TABLE consumables ADD CONSTRAINT fk_consumables_source_item FOREIGN KEY (source_item_id) REFERENCES procurement_items(id) ON DELETE SET NULL`);
+            console.log('Added source_item_id column + FK to consumables table.');
         }
 
         // Ensure users.room_id column exists (safe migration)

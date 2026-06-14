@@ -307,69 +307,64 @@
             <div class="filter-bar">
                 <div class="search-wrap">
                     <i class="fas fa-search search-icon"></i>
-                    <input type="text" id="searchInput" placeholder="Cari nama, kode, kategori..." />
+                    <input type="text" id="searchInput" placeholder="Cari nama atau kode barang..." />
                 </div>
                 @php
                     $rooms = collect($assets)->pluck('room_code')->unique()->filter()->values();
-                    $conditions = collect($assets)->pluck('condition_status')->unique()->filter()->values();
                 @endphp
                 <select id="roomFilter" class="filter-select">
                     <option value="">Semua Ruangan</option>
                     @foreach($rooms as $r) <option value="{{ $r }}">{{ $r }}</option> @endforeach
                 </select>
-                <select id="condFilter" class="filter-select">
-                    <option value="">Semua Kondisi</option>
-                    @foreach($conditions as $cond) <option value="{{ $cond }}">{{ $cond }}</option> @endforeach
-                </select>
             </div>
-            <span class="result-count" id="resultCount">{{ count($assets) }} aset</span>
+            <span class="result-count" id="resultCount">{{ collect($assets)->groupBy('name')->count() }} jenis barang</span>
         </div>
 
         <div style="overflow-x:auto;">
             <table class="inventory-table" id="inventoryTable">
                 <thead>
                     <tr>
-                        <th>KODE</th>
                         <th>NAMA BARANG</th>
-                        <th>KATEGORI</th>
+                        <th style="text-align:center;">JUMLAH UNIT</th>
+                        <th>PILIH UNIT (per barang)</th>
                         <th>RUANGAN</th>
-                        <th>KONDISI</th>
-                        <th style="text-align:center;">TAHUN</th>
                         <th style="text-align:center;">AKSI</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($assets as $a)
+                    @php $grouped = collect($assets)->groupBy('name'); @endphp
+                    @forelse($grouped as $groupName => $units)
                     @php
-                        $condStr   = strtolower($a['condition_status'] ?? 'baik');
-                        $condClass = 'cond-baik';
-                        if(str_contains($condStr, 'maintenance') || str_contains($condStr, 'perlu')) $condClass = 'cond-maint';
-                        elseif(str_contains($condStr, 'diperbaiki')) $condClass = 'cond-diperbaiki';
-                        elseif(str_contains($condStr, 'ringan'))     $condClass = 'cond-rusak-ringan';
-                        elseif(str_contains($condStr, 'berat'))      $condClass = 'cond-rusak-berat';
+                        $first      = $units->first();
+                        $roomCodes  = $units->pluck('room_code')->filter()->unique()->implode(', ');
+                        $searchData = strtolower($groupName.' '.$units->pluck('label_number')->filter()->implode(' ').' '.$units->pluck('code')->filter()->implode(' '));
                     @endphp
-                    <tr class="item-row"
-                        data-search="{{ strtolower($a['name'] . ' ' . ($a['code'] ?? '') . ' ' . ($a['category'] ?? '')) }}"
-                        data-room="{{ $a['room_code'] ?? '' }}"
-                        data-cond="{{ $a['condition_status'] ?? '' }}">
-                        <td><span class="item-code">{{ $a['code'] ?? '-' }}</span></td>
-                        <td><p class="item-title">{{ $a['name'] }}</p></td>
-                        <td><span class="cell-text">{{ $a['category'] ?? '-' }}</span></td>
-                        <td><span class="cell-text font-semibold">{{ $a['room_code'] ?? '-' }}</span></td>
-                        <td>
-                            <span class="cond-badge {{ $condClass }}">
-                                <span class="cb-dot"></span> {{ $a['condition_status'] ?? 'Baik' }}
-                            </span>
+                    <tr class="group-row"
+                        data-search="{{ $searchData }}"
+                        data-room="{{ $first['room_code'] ?? '' }}">
+                        <td><p class="item-title">{{ $groupName }}</p></td>
+                        <td style="text-align:center;">
+                            <span style="background:#f1f5f9;padding:.2rem .55rem;border-radius:.35rem;font-weight:700;">{{ $units->count() }}</span>
                         </td>
-                        <td style="text-align:center;"><span class="cell-text">{{ $a['year'] ?? '-' }}</span></td>
+                        <td>
+                            <select class="form-control unit-select" style="min-width:210px;">
+                                @foreach($units as $u)
+                                @php $code = $u['label_number'] ?? ($u['code'] ?? ('#'.$u['id'])); @endphp
+                                <option value="{{ $u['id'] }}"
+                                        data-name="{{ addslashes($groupName.' — '.$code) }}"
+                                        data-cond="{{ $u['condition_status'] ?? 'Baik' }}">
+                                    {{ $code }} — {{ $u['condition_status'] ?? 'Baik' }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </td>
+                        <td><span class="cell-text font-semibold">{{ $roomCodes !== '' ? $roomCodes : '-' }}</span></td>
                         <td style="text-align:center;">
                             <div style="display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap;">
-                                <button class="act-btn btn-maint"
-                                    onclick="openMaintModal({{ $a['id'] }}, '{{ addslashes($a['name']) }}', '{{ addslashes($a['condition_status'] ?? 'Baik') }}')">
+                                <button class="act-btn btn-maint" onclick="maintFromRow(this)">
                                     <i class="fas fa-wrench"></i> Log Maintenance
                                 </button>
-                                <button class="act-btn btn-logs"
-                                    onclick="openLogsModal({{ $a['id'] }}, '{{ addslashes($a['name']) }}')">
+                                <button class="act-btn btn-logs" onclick="logsFromRow(this)">
                                     <i class="fas fa-history"></i> Riwayat
                                 </button>
                             </div>
@@ -377,7 +372,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" style="text-align:center;padding:3rem;">
+                        <td colspan="5" style="text-align:center;padding:3rem;">
                             <i class="fas fa-box-open" style="font-size:2.5rem;color:#d2d6da;margin-bottom:1rem;display:block;"></i>
                             <p style="color:#7b809a;">Tidak ada data inventaris.</p>
                         </td>
@@ -425,15 +420,9 @@
                 <textarea id="mDesc" class="form-control" rows="3"
                     placeholder="Contoh: Kalibrasi sensor suhu, penggantian filter, pembersihan komponen internal..." required></textarea>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Biaya Maintenance (Rp)</label>
-                    <input type="number" id="mCost" class="form-control" min="0" value="0" placeholder="0">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Catatan Tambahan</label>
-                    <input type="text" id="mNotes" class="form-control" placeholder="Catatan singkat (opsional)...">
-                </div>
+            <div class="form-group">
+                <label class="form-label">Catatan Tambahan</label>
+                <input type="text" id="mNotes" class="form-control" placeholder="Catatan singkat (opsional)...">
             </div>
 
             {{-- BHP yang digunakan --}}
@@ -502,6 +491,21 @@ document.querySelectorAll('.modal-backdrop').forEach(m => {
     m.addEventListener('click', e => { if(e.target === m) closeModal(m.id); });
 });
 
+// ── Aksi dari baris grup (pakai unit terpilih di dropdown) ──
+function selectedUnit(btn) {
+    const sel = btn.closest('tr').querySelector('.unit-select');
+    const opt = sel.options[sel.selectedIndex];
+    return { id: sel.value, name: opt.dataset.name, cond: opt.dataset.cond || 'Baik' };
+}
+function maintFromRow(btn) {
+    const u = selectedUnit(btn);
+    openMaintModal(u.id, u.name, u.cond);
+}
+function logsFromRow(btn) {
+    const u = selectedUnit(btn);
+    openLogsModal(u.id, u.name);
+}
+
 // ── Maintenance Modal ──────────────────────────────
 function openMaintModal(assetId, name, condBefore) {
     document.getElementById('mAssetId').value     = assetId;
@@ -510,7 +514,6 @@ function openMaintModal(assetId, name, condBefore) {
     document.getElementById('mDate').value        = new Date().toISOString().split('T')[0];
     document.getElementById('mCondAfter').value   = 'Baik';
     document.getElementById('mDesc').value        = '';
-    document.getElementById('mCost').value        = 0;
     document.getElementById('mNotes').value       = '';
     document.getElementById('bhpUsedList').innerHTML = '';
     document.getElementById('maintError').style.display = 'none';
@@ -606,7 +609,6 @@ async function submitMaintLog(e) {
         maintenance_date: document.getElementById('mDate').value,
         description:      document.getElementById('mDesc').value.trim(),
         condition_after:  document.getElementById('mCondAfter').value,
-        cost:             parseFloat(document.getElementById('mCost').value) || 0,
         notes:            document.getElementById('mNotes').value.trim(),
         consumables_used,
     };
@@ -693,8 +695,6 @@ function renderLogs(logs) {
         ).join('');
 
         const bhpSection = bhpUsed ? `<div class="log-bhp-used">${bhpUsed}</div>` : '';
-        const costStr = log.cost > 0
-            ? `<span> • Biaya: <strong>Rp ${Number(log.cost).toLocaleString('id-ID')}</strong></span>` : '';
         const notesStr = log.notes ? `<span> • ${log.notes}</span>` : '';
         const performer = log.performed_by_name ? `Oleh: <strong>${log.performed_by_name}</strong> • ` : '';
 
@@ -705,7 +705,7 @@ function renderLogs(logs) {
             </button>
             <div class="log-date">${log.maintenance_date ? new Date(log.maintenance_date).toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}) : '-'}</div>
             <div class="log-desc">${log.description}</div>
-            <div class="log-meta">${performer}${costStr}${notesStr}</div>
+            <div class="log-meta">${performer}${notesStr}</div>
             <div class="log-cond">
                 ${condBadge(log.condition_before ?? '-')}
                 <span class="cond-arrow"><i class="fas fa-arrow-right"></i></span>
@@ -747,30 +747,26 @@ async function deleteLog(logId) {
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('searchInput');
     const roomFilter  = document.getElementById('roomFilter');
-    const condFilter  = document.getElementById('condFilter');
-    const rows        = document.querySelectorAll('.item-row');
+    const rows        = document.querySelectorAll('.group-row');
     const resultCount = document.getElementById('resultCount');
 
     function applyFilters() {
         const q    = searchInput.value.toLowerCase();
         const room = roomFilter.value;
-        const cond = condFilter.value;
         let count = 0;
 
         rows.forEach(row => {
             const mQ = (row.dataset.search || '').includes(q);
             const mR = !room || row.dataset.room === room;
-            const mC = !cond || row.dataset.cond === cond;
-            const show = mQ && mR && mC;
+            const show = mQ && mR;
             row.style.display = show ? '' : 'none';
             if (show) count++;
         });
-        resultCount.textContent = count + ' aset';
+        resultCount.textContent = count + ' jenis barang';
     }
 
     if (searchInput) searchInput.addEventListener('input',  applyFilters);
     if (roomFilter)  roomFilter.addEventListener('change', applyFilters);
-    if (condFilter)  condFilter.addEventListener('change', applyFilters);
 });
 </script>
 @endsection
