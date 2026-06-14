@@ -105,8 +105,8 @@ exports.createDraft = async (req, res) => {
 
                 await connection.query(
                     `INSERT INTO procurement_items
-                     (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id, notes, room_id, min_stock, location)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                     (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id, notes, room_id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         draftId,
                         item.item_type || 'inventaris',
@@ -116,9 +116,7 @@ exports.createDraft = async (req, res) => {
                         item.purchase_link?.trim() || null,
                         item.replaced_asset_id || null,
                         item.notes?.trim() || null,
-                        item.room_id || null,
-                        (item.min_stock === undefined || item.min_stock === null || item.min_stock === '') ? null : parseInt(item.min_stock),
-                        item.location?.trim() || null
+                        item.room_id || null
                     ]
                 );
             }
@@ -182,8 +180,8 @@ exports.updateDraft = async (req, res) => {
 
                 await connection.query(
                     `INSERT INTO procurement_items
-                     (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id, notes, room_id, min_stock, location)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+                     (draft_id, item_type, name, price, quantity, purchase_link, replaced_asset_id, notes, room_id)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                     [
                         id,
                         item.item_type || 'inventaris',
@@ -193,9 +191,7 @@ exports.updateDraft = async (req, res) => {
                         item.purchase_link?.trim() || null,
                         item.replaced_asset_id || null,
                         item.notes?.trim() || null,
-                        item.room_id || null,
-                        (item.min_stock === undefined || item.min_stock === null || item.min_stock === '') ? null : parseInt(item.min_stock),
-                        item.location?.trim() || null
+                        item.room_id || null
                     ]
                 );
             }
@@ -331,7 +327,7 @@ exports.finalizeDraft = async (req, res) => {
 
         // ── Materialisasi BHP: tiap item 'bhp' disetujui → baris consumables (idempotent via source_item_id) ──
         const [approvedBhpItems] = await connection.query(
-            `SELECT pi.id, pi.name, pi.price, pi.quantity, pi.room_id, pi.min_stock, pi.location
+            `SELECT pi.id, pi.name, pi.price, pi.quantity, pi.room_id
              FROM procurement_items pi
              WHERE pi.draft_id = ?
                AND pi.item_type = 'bhp'
@@ -345,19 +341,22 @@ exports.finalizeDraft = async (req, res) => {
                 [item.id]
             );
             if ((existing.cnt || 0) > 0) continue; // sudah dimaterialisasi sebelumnya
-            await connection.query(
-                `INSERT INTO consumables (name, stock, min_stock, price, location, room_id, source_item_id)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [
-                    item.name,
-                    item.quantity || 0,
-                    item.min_stock || 0,
-                    item.price || 0,
-                    item.location || null,
-                    item.room_id || null,
-                    item.id
-                ]
+            // Upsert by name: kalau nama sudah ada, tambah stok; kalau belum, insert baru
+            const [[byName]] = await connection.query(
+                `SELECT id FROM consumables WHERE name = ? LIMIT 1`, [item.name]
             );
+            if (byName) {
+                await connection.query(
+                    `UPDATE consumables SET stock = stock + ?, updated_at = NOW() WHERE id = ?`,
+                    [item.quantity || 0, byName.id]
+                );
+            } else {
+                await connection.query(
+                    `INSERT INTO consumables (name, stock, min_stock, price, room_id, source_item_id)
+                     VALUES (?, ?, ?, ?, ?, ?)`,
+                    [item.name, item.quantity || 0, 0, item.price || 0, item.room_id || null, item.id]
+                );
+            }
             consumablesCreatedCount++;
         }
 

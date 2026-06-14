@@ -70,7 +70,8 @@ class StafLabController extends Controller
             $consumableResponse = Http::withHeaders($this->authHeaders())
                 ->get("{$this->apiUrl()}/api/consumables");
 
-            $assets      = $assetResponse->successful()      ? ($assetResponse->json()['assets'] ?? []) : [];
+            $allAssets   = $assetResponse->successful()      ? ($assetResponse->json()['assets'] ?? []) : [];
+            $assets      = array_values(array_filter($allAssets, fn($a) => !empty($a['label_number'])));
             $consumables = $consumableResponse->successful() ? ($consumableResponse->json()['consumables'] ?? []) : [];
 
             $error = $assetResponse->successful() ? null

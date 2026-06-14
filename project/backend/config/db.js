@@ -333,6 +333,18 @@ const testConnection = async () => {
             console.log('Added source_item_id column + FK to consumables table.');
         }
 
+        // Safe migration: hapus kolom category, unit, location, code dari consumables (tidak dipakai di requirement)
+        for (const dropCol of ['category', 'unit', 'location', 'code']) {
+            const [colExists] = await connection.query(`
+                SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+                WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'consumables' AND COLUMN_NAME = ?
+            `, [dropCol]);
+            if (colExists.length > 0) {
+                await connection.query(`ALTER TABLE consumables DROP COLUMN \`${dropCol}\``);
+                console.log(`Dropped column ${dropCol} from consumables table.`);
+            }
+        }
+
         // Ensure users.room_id column exists (safe migration)
         const [uCols] = await connection.query(`
             SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS

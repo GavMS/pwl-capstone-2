@@ -241,44 +241,12 @@
         @endif
 
         {{-- Stats Row --}}
-        @php
-            $totalItems   = count($consumables);
-            $criticalItems = collect($consumables)->filter(fn($c) => ($c['stock'] ?? 0) <= ($c['min_stock'] ?? 0));
-            $amanItems    = $totalItems - $criticalItems->count();
-            $totalValue   = collect($consumables)->sum(fn($c) => ($c['stock'] ?? 0) * ($c['price'] ?? 0));
-        @endphp
         <div class="stats-row">
             <div class="stat-card">
                 <div class="stat-icon purple"><i class="fas fa-flask"></i></div>
-                <div><div class="stat-val">{{ $totalItems }}</div><div class="stat-lbl">Total Item BHP</div></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon green"><i class="fas fa-check-circle"></i></div>
-                <div><div class="stat-val">{{ $amanItems }}</div><div class="stat-lbl">Stok Aman</div></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon orange"><i class="fas fa-exclamation-triangle"></i></div>
-                <div><div class="stat-val">{{ $criticalItems->count() }}</div><div class="stat-lbl">Stok Kritis</div></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon blue"><i class="fas fa-coins"></i></div>
-                <div>
-                    <div class="stat-val" style="font-size:1.1rem;">Rp {{ number_format($totalValue, 0, ',', '.') }}</div>
-                    <div class="stat-lbl">Total Nilai Stok</div>
-                </div>
+                <div><div class="stat-val">{{ count($consumables) }}</div><div class="stat-lbl">Total Item BHP</div></div>
             </div>
         </div>
-
-        {{-- Critical Warning --}}
-        @if($criticalItems->count() > 0)
-        <div class="alert-warning">
-            <i class="fas fa-exclamation-triangle"></i>
-            <div>
-                <strong>{{ $criticalItems->count() }} item di bawah stok minimum!</strong>
-                {{ $criticalItems->pluck('name')->join(', ') }}.
-            </div>
-        </div>
-        @endif
 
         {{-- Table Card --}}
         <div class="table-card">
@@ -286,20 +254,8 @@
                 <div class="filter-bar">
                     <div class="search-wrap">
                         <i class="fas fa-search search-icon"></i>
-                        <input type="text" id="searchInput" placeholder="Cari nama, kode, atau kategori BHP..." />
+                        <input type="text" id="searchInput" placeholder="Cari nama atau kode BHP..." />
                     </div>
-                    @php $categories = collect($consumables)->pluck('category')->unique()->filter()->values(); @endphp
-                    <select id="catFilter" class="filter-select">
-                        <option value="">Semua Kategori</option>
-                        @foreach($categories as $cat)
-                            <option value="{{ $cat }}">{{ $cat }}</option>
-                        @endforeach
-                    </select>
-                    <select id="statusFilter" class="filter-select">
-                        <option value="">Semua Status</option>
-                        <option value="aman">Aman</option>
-                        <option value="kritis">Kritis</option>
-                    </select>
                 </div>
                 <span class="result-count" id="resultCount">{{ count($consumables) }} item</span>
             </div>
@@ -308,66 +264,33 @@
                 <table class="bhp-table" id="bhpTable">
                     <thead>
                         <tr>
-                            <th>KODE</th>
                             <th>NAMA BHP</th>
-                            <th>KATEGORI</th>
-                            <th>LOKASI</th>
-                            <th>SATUAN</th>
                             <th style="text-align:center;">STOK</th>
-                            <th style="text-align:center;">MIN</th>
-                            <th>STATUS</th>
-                            <th style="text-align:right;">HARGA</th>
+                            <th>RUANGAN</th>
                             <th style="text-align:center;">AKSI</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($consumables as $c)
-                        @php $isCritical = ($c['stock'] ?? 0) <= ($c['min_stock'] ?? 0); @endphp
                         <tr class="item-row"
-                            data-search="{{ strtolower($c['name'] . ' ' . ($c['code'] ?? '') . ' ' . ($c['category'] ?? '')) }}"
-                            data-cat="{{ $c['category'] ?? '' }}"
-                            data-status="{{ $isCritical ? 'kritis' : 'aman' }}">
-
-                            <td><span class="item-code">{{ $c['code'] ?? '-' }}</span></td>
-                            <td>
-                                <p class="item-title">{{ $c['name'] }}</p>
-                                @if($c['description'] ?? '')
-                                <p style="font-size:.75rem;color:#adb5bd;margin:0;">{{ Str::limit($c['description'], 50) }}</p>
-                                @endif
-                            </td>
-                            <td><span class="cell-text">{{ $c['category'] ?? '-' }}</span></td>
-                            <td><span class="cell-text font-semibold">{{ $c['location'] ?? '-' }}</span></td>
-                            <td><span class="cell-text">{{ $c['unit'] ?? '-' }}</span></td>
+                            data-search="{{ strtolower($c['name']) }}">
+                            <td><p class="item-title">{{ $c['name'] }}</p></td>
                             <td style="text-align:center;">
-                                <span class="cell-text font-bold {{ $isCritical ? 'text-red-600' : 'text-slate-800' }}" style="font-size:.95rem;">
-                                    {{ $c['stock'] ?? 0 }}
-                                </span>
+                                <span class="cell-text font-bold" style="font-size:.95rem;">{{ $c['stock'] ?? 0 }}</span>
                             </td>
-                            <td style="text-align:center;"><span class="cell-text">{{ $c['min_stock'] ?? 0 }}</span></td>
-                            <td>
-                                @if($isCritical)
-                                <span class="cond-badge cond-kritis"><span class="cb-dot"></span> Kritis</span>
-                                @else
-                                <span class="cond-badge cond-aman"><span class="cb-dot"></span> Aman</span>
-                                @endif
-                            </td>
-                            <td style="text-align:right;">
-                                <span class="cell-text">Rp {{ number_format($c['price'] ?? 0, 0, ',', '.') }}</span>
-                            </td>
+                            <td><span class="cell-text">{{ $c['room_code'] ?? '-' }}</span></td>
                             <td style="text-align:center;">
-                                <div style="display:flex;gap:.4rem;justify-content:center;flex-wrap:wrap;">
-                                    <button class="act-btn btn-stock" title="Sesuaikan Stok"
-                                        onclick="openStockModal({{ $c['id'] }}, '{{ addslashes($c['name']) }}', {{ $c['stock'] ?? 0 }}, '{{ addslashes($c['unit'] ?? '') }}')">
-                                        <i class="fas fa-boxes"></i> Stok
-                                    </button>
-                                </div>
+                                <button class="act-btn btn-stock" title="Sesuaikan Stok"
+                                    onclick="openStockModal({{ $c['id'] }}, '{{ addslashes($c['name']) }}', {{ $c['stock'] ?? 0 }})">
+                                    <i class="fas fa-boxes"></i> Stok
+                                </button>
                             </td>
                         </tr>
                         @empty
                         <tr id="emptyRow">
-                            <td colspan="9" style="text-align:center; padding: 3rem;">
+                            <td colspan="4" style="text-align:center; padding: 3rem;">
                                 <i class="fas fa-flask" style="font-size:2.5rem; color:#d2d6da; margin-bottom:1rem; display:block;"></i>
-                                <p style="color:#7b809a;">Tidak ada data BHP. Klik "Tambah BHP" untuk menambahkan.</p>
+                                <p style="color:#7b809a;">Belum ada data BHP. BHP akan muncul setelah pengadaan difinalisasi.</p>
                             </td>
                         </tr>
                         @endforelse
@@ -441,12 +364,12 @@ document.querySelectorAll('.modal-backdrop').forEach(m => {
 });
 
 // ── Stock Adjustment Modal ─────────────────────────
-function openStockModal(id, name, currentStock, unit) {
+function openStockModal(id, name, currentStock) {
     document.getElementById('adjItemId').value    = id;
     document.getElementById('adjCurrentStock').value = currentStock;
     document.getElementById('stockItemName').textContent = name;
     document.getElementById('stockCurrent').textContent  = currentStock;
-    document.getElementById('stockUnit').textContent     = unit;
+    document.getElementById('stockUnit').textContent     = '';
     document.getElementById('adjType').value  = 'add';
     document.getElementById('adjQty').value   = 1;
     document.getElementById('adjQty').min     = 1;
@@ -537,32 +460,22 @@ async function submitStockAdjust() {
 
 // ── Filter / Search ────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-    const searchInput  = document.getElementById('searchInput');
-    const catFilter    = document.getElementById('catFilter');
-    const statusFilter = document.getElementById('statusFilter');
-    const rows         = document.querySelectorAll('.item-row');
-    const resultCount  = document.getElementById('resultCount');
+    const searchInput = document.getElementById('searchInput');
+    const rows        = document.querySelectorAll('.item-row');
+    const resultCount = document.getElementById('resultCount');
 
     function applyFilters() {
-        const q      = searchInput.value.toLowerCase();
-        const cat    = catFilter.value;
-        const status = statusFilter.value;
+        const q = searchInput.value.toLowerCase();
         let count = 0;
-
         rows.forEach(row => {
-            const mQ = (row.dataset.search || '').includes(q);
-            const mC = !cat    || row.dataset.cat    === cat;
-            const mS = !status || row.dataset.status === status;
-            const show = mQ && mC && mS;
+            const show = (row.dataset.search || '').includes(q);
             row.style.display = show ? '' : 'none';
             if (show) count++;
         });
         resultCount.textContent = count + ' item';
     }
 
-    if (searchInput)  searchInput.addEventListener('input',   applyFilters);
-    if (catFilter)    catFilter.addEventListener('change',    applyFilters);
-    if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
 });
 </script>
 @endsection
