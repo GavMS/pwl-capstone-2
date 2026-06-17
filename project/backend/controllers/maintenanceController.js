@@ -25,7 +25,7 @@ exports.getLogsByAsset = async (req, res) => {
         // Ambil BHP yang digunakan untuk setiap log
         for (const log of logs) {
             const [usedItems] = await db.query(
-                `SELECT mc.*, c.name AS consumable_name, c.code AS consumable_code
+                `SELECT mc.*, c.name AS consumable_name
                  FROM maintenance_consumables mc
                  JOIN consumables c ON mc.consumable_id = c.id
                  WHERE mc.log_id = ?`,
@@ -60,7 +60,7 @@ exports.getAllLogs = async (req, res) => {
         // Ambil BHP yang digunakan untuk setiap log
         for (const log of logs) {
             const [usedItems] = await db.query(
-                `SELECT mc.*, c.name AS consumable_name, c.code AS consumable_code
+                `SELECT mc.*, c.name AS consumable_name
                  FROM maintenance_consumables mc
                  JOIN consumables c ON mc.consumable_id = c.id
                  WHERE mc.log_id = ?`,
